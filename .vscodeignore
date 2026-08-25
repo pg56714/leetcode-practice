@@ -1,0 +1,10 @@
+src/**
+out/**
+node_modules/**
+.vscode/**
+.vscode-test/**
+.github/**
+tsconfig.json
+bun.lock
+.gitignore
+*.vsix

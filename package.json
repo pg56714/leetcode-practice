@@ -1,0 +1,103 @@
+{
+  "name": "leetcode-practice",
+  "displayName": "LeetCode Practice",
+  "description": "Solve LeetCode problems in VS Code, with a workflow built around spaced repetition.",
+  "version": "0.1.0",
+  "publisher": "pg56714",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pg56714/leetcode-practice"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Education",
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "leetcode-practice",
+          "title": "LeetCode Practice",
+          "icon": "resources/sidebar.svg"
+        }
+      ]
+    },
+    "views": {
+      "leetcode-practice": [
+        {
+          "id": "leetcodePractice.daily",
+          "name": "Daily Challenge"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "leetcodePractice.signIn",
+        "title": "LeetCode Practice: Sign In",
+        "icon": "$(sign-in)"
+      },
+      {
+        "command": "leetcodePractice.signOut",
+        "title": "LeetCode Practice: Sign Out"
+      },
+      {
+        "command": "leetcodePractice.refreshDaily",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "leetcodePractice.showOutput",
+        "title": "LeetCode Practice: Show Output"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "leetcodePractice.refreshDaily",
+          "when": "view == leetcodePractice.daily",
+          "group": "navigation@1"
+        },
+        {
+          "command": "leetcodePractice.signIn",
+          "when": "view == leetcodePractice.daily && !leetcodePractice.signedIn",
+          "group": "navigation@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "LeetCode Practice",
+      "properties": {
+        "leetcodePractice.storagePath": {
+          "type": "string",
+          "default": "",
+          "description": "Where solution folders are created. Defaults to the first workspace folder."
+        },
+        "leetcodePractice.defaultLanguage": {
+          "type": "string",
+          "default": "python3",
+          "description": "Language slug used when opening a problem (e.g. python3, cpp, rust)."
+        }
+      }
+    }
+  },
+  "packageManager": "bun@1.3.14",
+  "scripts": {
+    "compile": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap",
+    "watch": "bun run compile -- --watch",
+    "package": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify",
+    "vscode:prepublish": "bun run package",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "@types/vscode": "^1.90.0",
+    "esbuild": "^0.20.2",
+    "typescript": "^5.4.5"
+  }
+}
