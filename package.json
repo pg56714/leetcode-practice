@@ -33,6 +33,10 @@
         {
           "id": "leetcodePractice.daily",
           "name": "Daily Challenge"
+        },
+        {
+          "id": "leetcodePractice.problems",
+          "name": "Problems"
         }
       ]
     },
@@ -54,6 +58,21 @@
       {
         "command": "leetcodePractice.showOutput",
         "title": "LeetCode Practice: Show Output"
+      },
+      {
+        "command": "leetcodePractice.refreshProblems",
+        "title": "Refresh Problems",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "leetcodePractice.searchProblems",
+        "title": "Search Problems",
+        "icon": "$(search)"
+      },
+      {
+        "command": "leetcodePractice.clearProblemSearch",
+        "title": "Clear Search",
+        "icon": "$(clear-all)"
       }
     ],
     "menus": {
@@ -67,6 +86,21 @@
           "command": "leetcodePractice.signIn",
           "when": "view == leetcodePractice.daily && !leetcodePractice.signedIn",
           "group": "navigation@2"
+        },
+        {
+          "command": "leetcodePractice.searchProblems",
+          "when": "view == leetcodePractice.problems",
+          "group": "navigation@1"
+        },
+        {
+          "command": "leetcodePractice.clearProblemSearch",
+          "when": "view == leetcodePractice.problems && leetcodePractice.problemsFiltered",
+          "group": "navigation@2"
+        },
+        {
+          "command": "leetcodePractice.refreshProblems",
+          "when": "view == leetcodePractice.problems",
+          "group": "navigation@3"
         }
       ]
     },

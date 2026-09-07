@@ -1,8 +1,8 @@
 /**
  * GraphQL documents sent to leetcode.com.
  *
- * Field names are dictated by LeetCode's schema; the shape of each document is
- * kept as small as the UI needs, so a listing never pulls a problem body.
+ * Field names are dictated by LeetCode's schema; each document is kept as small
+ * as the UI needs, so a listing never drags a problem body along with it.
  */
 
 export const USER_STATUS = `
@@ -26,6 +26,29 @@ export const DAILY_CHALLENGE = `
         difficulty
         isPaidOnly
         status
+      }
+    }
+  }
+`;
+
+/**
+ * One page of the problem set.
+ *
+ * LeetCode caps a page at 100 rows no matter what `limit` asks for, so callers
+ * page with `skip` and use `total` to know when to stop.
+ */
+export const PROBLEM_PAGE = `
+  query problemsetQuestionList($limit: Int, $skip: Int) {
+    problemsetQuestionList: questionList(categorySlug: "", limit: $limit, skip: $skip, filters: {}) {
+      total: totalNum
+      questions: data {
+        questionFrontendId
+        title
+        titleSlug
+        difficulty
+        isPaidOnly
+        status
+        acRate
       }
     }
   }

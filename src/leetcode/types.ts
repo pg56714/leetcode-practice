@@ -22,6 +22,8 @@ export interface ProblemSummary {
   paidOnly: boolean;
   /** "ac" once solved, "notac" when attempted but failing, null when untouched. */
   status: string | null;
+  /** Acceptance rate as a percentage. Null for queries that do not ask for it. */
+  acRate: number | null;
 }
 
 export interface DailyChallenge {
