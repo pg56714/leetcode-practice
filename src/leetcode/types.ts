@@ -30,3 +30,33 @@ export interface DailyChallenge {
   date: string;
   problem: ProblemSummary;
 }
+
+export interface CodeSnippet {
+  /** Human label, e.g. "Python3". */
+  lang: string;
+  /** Slug the submit API expects, e.g. "python3". */
+  langSlug: string;
+  code: string;
+}
+
+/** A single problem, with everything needed to start solving it. */
+export interface ProblemDetail {
+  /** Internal database id. The submit and interpret endpoints want this one. */
+  id: string;
+  /** The number shown on the website. Use this for display and naming. */
+  number: string;
+  title: string;
+  slug: string;
+  difficulty: Difficulty;
+  paidOnly: boolean;
+  /** Problem statement as HTML, exactly as LeetCode serves it. */
+  content: string;
+  /** The first example, in the format the interpret endpoint accepts. */
+  sampleTestCase: string;
+  /** Every example, newline separated. */
+  exampleTestcases: string;
+  /** How many lines one test case occupies, derived from metaData.params. */
+  linesPerCase: number;
+  snippets: CodeSnippet[];
+  tags: string[];
+}

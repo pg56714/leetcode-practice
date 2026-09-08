@@ -53,3 +53,35 @@ export const PROBLEM_PAGE = `
     }
   }
 `;
+
+/**
+ * Everything needed to start working on one problem.
+ *
+ * `metaData` is a JSON string whose `params` array length is how many lines one
+ * test case occupies — the only reliable source for splitting test input.
+ */
+export const QUESTION_DETAIL = `
+  query questionDetail($titleSlug: String!) {
+    question(titleSlug: $titleSlug) {
+      questionId
+      questionFrontendId
+      title
+      titleSlug
+      content
+      difficulty
+      isPaidOnly
+      sampleTestCase
+      exampleTestcases
+      metaData
+      codeSnippets {
+        lang
+        langSlug
+        code
+      }
+      topicTags {
+        name
+        slug
+      }
+    }
+  }
+`;

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { type Api, problemUrl } from '../leetcode/api';
+import type { Api } from '../leetcode/api';
 import type { DailyChallenge } from '../leetcode/types';
 import { log } from '../log';
 import { problemIcon } from '../ui/icons';
@@ -63,11 +63,10 @@ export class DailyChallengeView implements vscode.TreeDataProvider<vscode.TreeIt
     item.description = `${problem.difficulty} · ${date}`;
     item.iconPath = problemIcon(problem);
     item.tooltip = problem.paidOnly ? 'Premium only' : problem.title;
-    // Phase 3 replaces this with "open the problem in the editor".
     item.command = {
-      command: 'vscode.open',
-      title: 'Open on LeetCode',
-      arguments: [vscode.Uri.parse(problemUrl(problem.slug))],
+      command: 'leetcodePractice.openProblem',
+      title: 'Open problem',
+      arguments: [problem.slug],
     };
     return [item];
   }

@@ -1,7 +1,14 @@
 import { log } from '../log';
-import { DAILY_CHALLENGE, PROBLEM_PAGE, USER_STATUS } from './queries';
+import { DAILY_CHALLENGE, PROBLEM_PAGE, QUESTION_DETAIL, USER_STATUS } from './queries';
 import type { Session } from './session';
-import type { DailyChallenge, Difficulty, ProblemSummary, UserStatus } from './types';
+import type {
+  CodeSnippet,
+  DailyChallenge,
+  Difficulty,
+  ProblemDetail,
+  ProblemSummary,
+  UserStatus,
+} from './types';
 
 export const ORIGIN = 'https://leetcode.com';
 
@@ -104,6 +111,45 @@ export class Api {
     return { total: page.total, problems: page.questions.map(toSummary) };
   }
 
+  /**
+   * Fetches one problem in full.
+   *
+   * Premium problems answer with empty content and no snippets rather than an
+   * error, so an unusable answer is turned into one here.
+   */
+  async questionDetail(slug: string): Promise<ProblemDetail> {
+    const data = await this.graphql<{ question: DetailNode | null }>(QUESTION_DETAIL, {
+      titleSlug: slug,
+    });
+
+    const node = data.question;
+    if (node === null) {
+      throw new LeetCodeError(`LeetCode does not know a problem called "${slug}"`);
+    }
+    if (node.codeSnippets === null || node.codeSnippets.length === 0) {
+      throw new LeetCodeError(
+        node.isPaidOnly
+          ? `"${node.title}" is a Premium problem, so its code templates are not available`
+          : `"${node.title}" came back without any code templates`,
+      );
+    }
+
+    return {
+      id: node.questionId,
+      number: node.questionFrontendId,
+      title: node.title,
+      slug: node.titleSlug,
+      difficulty: node.difficulty,
+      paidOnly: node.isPaidOnly,
+      content: node.content ?? '',
+      sampleTestCase: node.sampleTestCase ?? '',
+      exampleTestcases: node.exampleTestcases ?? node.sampleTestCase ?? '',
+      linesPerCase: linesPerCase(node.metaData),
+      snippets: node.codeSnippets,
+      tags: (node.topicTags ?? []).map((tag) => tag.name),
+    };
+  }
+
   async dailyChallenge(): Promise<DailyChallenge> {
     const data = await this.graphql<{
       activeDailyCodingChallengeQuestion: { date: string; question: QuestionNode } | null;
@@ -115,6 +161,43 @@ export class Api {
     }
     log.info(`Daily challenge for ${active.date}: ${active.question.titleSlug}`);
     return { date: active.date, problem: toSummary(active.question) };
+  }
+}
+
+/** Raw node returned for a single problem. */
+interface DetailNode {
+  questionId: string;
+  questionFrontendId: string;
+  title: string;
+  titleSlug: string;
+  content: string | null;
+  difficulty: Difficulty;
+  isPaidOnly: boolean;
+  sampleTestCase: string | null;
+  exampleTestcases: string | null;
+  metaData: string | null;
+  codeSnippets: CodeSnippet[] | null;
+  topicTags: { name: string; slug: string }[] | null;
+}
+
+/**
+ * How many lines one test case occupies.
+ *
+ * Every argument to the solution is passed on its own line, so the length of
+ * metaData.params is the answer. Verified against two-sum (2 params, 2 lines),
+ * ant-on-the-boundary (1 param, 1 line) and lru-cache (2 params, 2 lines, even
+ * though it is a class-design problem). Anything unparseable falls back to one
+ * line, which is what a single-argument problem needs.
+ */
+function linesPerCase(metaData: string | null): number {
+  if (metaData === null) {
+    return 1;
+  }
+  try {
+    const parsed = JSON.parse(metaData) as { params?: unknown[] };
+    return Array.isArray(parsed.params) && parsed.params.length > 0 ? parsed.params.length : 1;
+  } catch {
+    return 1;
   }
 }
 

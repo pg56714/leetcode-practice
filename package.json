@@ -73,6 +73,10 @@
         "command": "leetcodePractice.clearProblemSearch",
         "title": "Clear Search",
         "icon": "$(clear-all)"
+      },
+      {
+        "command": "leetcodePractice.openProblem",
+        "title": "LeetCode Practice: Open Problem"
       }
     ],
     "menus": {
@@ -136,5 +140,8 @@
     "@types/vscode": "^1.90.0",
     "esbuild": "^0.20.2",
     "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "xss": "^1.0.15"
   }
 }

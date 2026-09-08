@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { openProblem } from './commands/openProblem';
 import { Api, ORIGIN } from './leetcode/api';
 import { Catalogue } from './leetcode/catalogue';
 import { Session } from './leetcode/session';
@@ -7,6 +8,7 @@ import { log } from './log';
 import { StatusBar } from './ui/statusBar';
 import { DailyChallengeView } from './views/dailyChallenge';
 import { ProblemsView } from './views/problems';
+import { ProblemPanel } from './webview/problemPanel';
 
 /** Drives the "signed in" context key, which gates view/title buttons. */
 async function publishStatus(api: Api, statusBar: StatusBar): Promise<UserStatus | undefined> {
@@ -111,6 +113,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const catalogue = new Catalogue(api, context.globalStorageUri);
   const daily = new DailyChallengeView(api);
   const problems = new ProblemsView(catalogue);
+  const panel = new ProblemPanel();
 
   const problemsView = vscode.window.createTreeView('leetcodePractice.problems', {
     treeDataProvider: problems,
@@ -127,6 +130,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   context.subscriptions.push(
     statusBar,
     daily,
+    panel,
     problems,
     catalogue,
     problemsView,
@@ -146,6 +150,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('leetcodePractice.clearProblemSearch', () =>
       problems.clearSearch(),
     ),
+    vscode.commands.registerCommand('leetcodePractice.openProblem', (slug: unknown) => {
+      if (typeof slug !== 'string' || slug === '') {
+        log.error('openProblem was called without a problem slug');
+        return undefined;
+      }
+      return openProblem(context, api, panel, slug);
+    }),
     vscode.commands.registerCommand('leetcodePractice.showOutput', () => log.show()),
   );
 
