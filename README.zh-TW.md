@@ -13,17 +13,37 @@
 
 ### 登入
 
-側邊欄或狀態列點擊，有兩種方式：
-
-- **在瀏覽器授權** — 開啟 LeetCode，它會把 session 直接交回 VS Code，不用複製任何東西
-- **貼上 cookie** — 從瀏覽器 DevTools 複製 Cookie 標頭
+點側邊欄或狀態列，瀏覽器會開啟 LeetCode；在那邊授權完，VS Code 自己就會接到 session，
+不用複製任何東西。
 
 憑證存在 VS Code 的 secret storage（綁擴充套件 id，不會落到設定檔），
-**存之前會先向 LeetCode 驗證一次**，貼錯或過期當下就知道。
+**存之前會先向 LeetCode 驗證一次**，過期或無效當下就知道。
 
-瀏覽器授權是把 session 放在網址裡交回來的，所以回呼只在三個條件同時成立時才接受：
+因為授權是把 session 放在網址裡交回來的，回呼只在三個條件同時成立時才接受：
 這裡發起的授權還在有效期內（五分鐘）、位址是這個擴充套件、而且只接受一次。
 否則任何一個連結都能塞一份別人的 session 進來。
+
+<details>
+<summary><b>改用 cookie 登入</b></summary>
+
+在命令面板執行 **LeetCode Practice: Sign In with Cookie**。這是瀏覽器授權到不了的環境唯一的路：
+OS 沒註冊 `vscode://` 協定、Remote SSH 或 dev container（回呼要跨機器）、網頁版 VS Code、
+或 LeetCode 改掉授權頁。
+
+1. 在瀏覽器登入 <https://leetcode.com>
+2. 開 DevTools（F12），切到 **Network** 分頁
+3. 重新載入頁面，點任一個發往 `leetcode.com` 的請求，找 **Request Headers → Cookie**
+4. 把那整行複製貼上
+
+那行很長、絕大部分都用不到。實際只讀這兩個，你也可以只貼這兩個、順序不拘：
+
+```
+LEETCODE_SESSION=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; csrftoken=8kZQ2nR7...
+```
+
+session 幾週後會過期，屆時 Test / Submit 會開始出現「session may have expired」，重新登入即可。
+
+</details>
 
 ### 側邊欄
 
@@ -68,8 +88,9 @@
 ### 測試與提交
 
 開著解題檔時，`Ctrl+;` 拿 `testcases.txt` 的測資跑一次、`Ctrl+Enter` 正式提交，
-兩個也都在編輯器標題列有按鈕。結果顯示在旁邊的面板：判定、時間記憶體、
-每組測資與預期輸出並排、以及編譯或執行期錯誤。提交會先問一次，因為那會記在你的帳號上。
+兩個也都在編輯器標題列有按鈕。結果顯示在底部的 **LeetCode Results** 面板（跟終端機、輸出同一排）：
+判定、時間記憶體、每組測資與預期輸出並排、以及編譯或執行期錯誤。
+放在那裡而不是編輯器分頁，是因為結果是「瞄一眼」的東西，程式碼應該留在畫面上。提交會先問一次，因為那會記在你的帳號上。
 
 語言看**檔案本身的副檔名**，不是資料夾的 metadata —— 同一題可以同時有 `main.py`
 和 `main.rs`，你在哪個檔案按提交就送那個語言。

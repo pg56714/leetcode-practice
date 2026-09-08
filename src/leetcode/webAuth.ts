@@ -13,6 +13,20 @@ import { ORIGIN } from './api';
 const PENDING_TIMEOUT_MS = 5 * 60 * 1000;
 
 /**
+ * Offers the manual route when the handoff did not work.
+ *
+ * The browser flow has more moving parts than pasting does — a URI scheme the
+ * OS has to know, a callback that has to cross back into this window — so every
+ * failure here points at the path that needs none of them.
+ */
+async function offerCookieInstead(message: string): Promise<void> {
+  const choice = await vscode.window.showErrorMessage(message, 'Paste cookie instead');
+  if (choice === 'Paste cookie instead') {
+    await vscode.commands.executeCommand('leetcodePractice.signInWithCookie');
+  }
+}
+
+/**
  * Browser handoff sign-in.
  *
  * LeetCode's authorize-login page takes the editor's URI scheme and an
@@ -47,7 +61,7 @@ export class WebAuth implements vscode.UriHandler {
     const opened = await vscode.env.openExternal(target);
     if (!opened) {
       this.pendingSince = undefined;
-      void vscode.window.showErrorMessage('Could not open the browser for authorisation.');
+      await offerCookieInstead('Could not open the browser for authorisation.');
       return;
     }
 
@@ -76,9 +90,7 @@ export class WebAuth implements vscode.UriHandler {
     const cookie = new URLSearchParams(uri.query).get('cookie');
     if (cookie === null || cookie === '') {
       log.error('Authorisation callback carried no cookie');
-      void vscode.window.showErrorMessage(
-        'LeetCode did not hand back a session. Try again, or paste the cookie instead.',
-      );
+      await offerCookieInstead('LeetCode did not hand back a session.');
       return;
     }
 

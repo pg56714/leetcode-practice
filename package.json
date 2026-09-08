@@ -28,6 +28,13 @@
           "title": "LeetCode Practice",
           "icon": "resources/sidebar.svg"
         }
+      ],
+      "panel": [
+        {
+          "id": "leetcode-practice-results",
+          "title": "LeetCode Results",
+          "icon": "resources/sidebar.svg"
+        }
       ]
     },
     "views": {
@@ -39,6 +46,13 @@
         {
           "id": "leetcodePractice.problems",
           "name": "Problems"
+        }
+      ],
+      "leetcode-practice-results": [
+        {
+          "id": "leetcodePractice.results",
+          "name": "Results",
+          "type": "webview"
         }
       ]
     },
@@ -89,6 +103,10 @@
         "command": "leetcodePractice.submitSolution",
         "title": "LeetCode Practice: Submit Solution",
         "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "leetcodePractice.signInWithCookie",
+        "title": "LeetCode Practice: Sign In with Cookie"
       }
     ],
     "menus": {

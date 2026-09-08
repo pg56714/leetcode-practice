@@ -75,8 +75,16 @@ export async function applyCookieString(context: AuthContext, raw: string): Prom
   return false;
 }
 
-/** Asks for the cookie header by hand. */
-async function signInWithPastedCookie(context: AuthContext): Promise<void> {
+/**
+ * Asks for the cookie header by hand.
+ *
+ * The fallback for every environment the browser handoff cannot reach: a URI
+ * scheme the OS has not registered, Remote SSH and containers where the
+ * callback has to cross a machine boundary, VS Code on the web, or LeetCode
+ * changing its authorize-login page. Those all leave a browser session intact,
+ * which is all this needs.
+ */
+export async function signInWithPastedCookie(context: AuthContext): Promise<void> {
   const pasted = await vscode.window.showInputBox({
     title: 'LeetCode cookies',
     prompt: 'Paste the Cookie header, or just the LEETCODE_SESSION and csrftoken values',
@@ -93,45 +101,6 @@ async function signInWithPastedCookie(context: AuthContext): Promise<void> {
     return;
   }
   await applyCookieString(context, pasted);
-}
-
-/**
- * The sign-in command: pick a method, then run it.
- *
- * Browser authorisation leads because it needs no DevTools trip, but pasting a
- * cookie stays available. The handoff depends on LeetCode's authorize-login
- * page continuing to behave, and a manual path keeps a change there an
- * inconvenience rather than a dead end.
- */
-export async function signIn(
-  context: AuthContext,
-  startWebAuth: () => Promise<void>,
-): Promise<void> {
-  const choice = await vscode.window.showQuickPick(
-    [
-      {
-        label: '$(globe) Authorise in browser',
-        description: 'Recommended',
-        detail: 'Opens LeetCode, which hands the session back to VS Code',
-        method: 'web' as const,
-      },
-      {
-        label: '$(key) Paste cookie',
-        detail: 'Copy the Cookie header from your browser DevTools',
-        method: 'cookie' as const,
-      },
-    ],
-    { placeHolder: 'How would you like to sign in?' },
-  );
-
-  if (choice === undefined) {
-    return;
-  }
-  if (choice.method === 'web') {
-    await startWebAuth();
-    return;
-  }
-  await signInWithPastedCookie(context);
 }
 
 export async function signOut(context: AuthContext): Promise<void> {

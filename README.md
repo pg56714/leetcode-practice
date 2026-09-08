@@ -15,21 +15,45 @@ what to redo and when.
 
 ### Signing in
 
-Click the status bar or the sidebar and pick one of two ways in:
-
-- **Authorise in browser** — opens LeetCode, which hands the session straight
-  back to VS Code. Nothing to copy.
-- **Paste cookie** — copy the Cookie header out of your browser DevTools.
+Click the status bar or the sidebar and LeetCode opens in your browser; once
+you authorise there, VS Code picks the session up on its own. Nothing to copy.
 
 Credentials live in VS Code's secret storage, scoped to this extension, so they
 never reach a settings file. **They are checked against LeetCode before being
 stored**, so a bad or expired session fails immediately rather than at the first
 submission.
 
-The browser handoff returns the session in a URL, so a callback is accepted only
+Because the handoff returns the session in a URL, a callback is accepted only
 while an authorisation started here is still open (five minutes), only when
 addressed to this extension, and only once. Otherwise any link could hand the
 extension somebody else's session.
+
+<details>
+<summary><b>Signing in with a cookie instead</b></summary>
+
+Run **LeetCode Practice: Sign In with Cookie** from the command palette. It is
+the way in for anywhere the browser handoff cannot reach: a `vscode://` scheme
+the OS has not registered, Remote SSH or a dev container where the callback has
+to cross a machine boundary, VS Code on the web, or LeetCode changing its
+authorisation page.
+
+1. Sign in to <https://leetcode.com> in your browser
+2. Open DevTools (F12) and go to the **Network** tab
+3. Reload the page, click any request to `leetcode.com`, and find
+   **Request Headers → Cookie**
+4. Copy that whole line and paste it in
+
+The line is long and holds far more than is needed; only these two are read, and
+they can be pasted on their own in either order:
+
+```
+LEETCODE_SESSION=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; csrftoken=8kZQ2nR7...
+```
+
+Sessions expire after a few weeks, at which point Test and Submit start failing
+with "the session may have expired" and you sign in again.
+
+</details>
 
 ### The sidebar
 
@@ -82,9 +106,11 @@ focus, so the cursor lands where the typing happens.
 
 With a solution file open, `Ctrl+;` runs it against the cases in
 `testcases.txt` and `Ctrl+Enter` submits it; both also sit as buttons in the
-editor title bar. Results appear in a panel beside the code: verdict, timing,
-each case next to its expected output, and compile or runtime errors when there
-are any. A submission asks for confirmation first, since it is recorded against
+editor title bar. Results appear in the **LeetCode Results** panel at the
+bottom, alongside Terminal and Output: verdict, timing, each case next to its
+expected output, and compile or runtime errors when there are any. They sit
+there rather than in an editor tab because a result is something to glance at
+while the code stays on screen. A submission asks for confirmation first, since it is recorded against
 the account.
 
 The language comes from the file's own extension, not the folder's metadata: a

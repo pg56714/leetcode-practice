@@ -3,7 +3,7 @@ import { isSettled, readResult } from '../leetcode/judge';
 import { languageForExtension } from '../leetcode/languages';
 import type { JudgeApi } from '../leetcode/rest';
 import { log } from '../log';
-import type { ResultPanel } from '../webview/resultPanel';
+import type { ResultView } from '../webview/resultView';
 import { readMetadata, readTestCases } from '../workspace/problemFiles';
 
 /** How long to wait between polls, and how long to keep waiting overall. */
@@ -67,7 +67,7 @@ async function pollUntilDone(
  */
 export async function runSolution(
   judge: JudgeApi,
-  panel: ResultPanel,
+  panel: ResultView,
   mode: 'test' | 'submit',
 ): Promise<void> {
   const editor = vscode.window.activeTextEditor;

@@ -1,7 +1,12 @@
 import * as vscode from 'vscode';
 import { openProblem } from './commands/openProblem';
 import { runSolution } from './commands/runSolution';
-import { type AuthContext, publishStatus, signIn, signOut } from './commands/signIn';
+import {
+  type AuthContext,
+  publishStatus,
+  signInWithPastedCookie,
+  signOut,
+} from './commands/signIn';
 import { Api } from './leetcode/api';
 import { Catalogue } from './leetcode/catalogue';
 import { JudgeApi } from './leetcode/rest';
@@ -12,7 +17,7 @@ import { StatusBar } from './ui/statusBar';
 import { DailyChallengeView } from './views/dailyChallenge';
 import { ProblemsView } from './views/problems';
 import { ProblemPanel } from './webview/problemPanel';
-import { ResultPanel } from './webview/resultPanel';
+import { ResultView } from './webview/resultView';
 import { readMetadata } from './workspace/problemFiles';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
@@ -25,7 +30,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const daily = new DailyChallengeView(api);
   const problems = new ProblemsView(catalogue);
   const problemPanel = new ProblemPanel();
-  const resultPanel = new ResultPanel();
+  const results = new ResultView();
 
   const problemsView = vscode.window.createTreeView('leetcodePractice.problems', {
     treeDataProvider: problems,
@@ -63,13 +68,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     catalogue,
     problemsView,
     problemPanel,
-    resultPanel,
     { dispose: () => log.dispose() },
     vscode.window.registerUriHandler(webAuth),
+    vscode.window.registerWebviewViewProvider(ResultView.viewId, results),
     vscode.window.registerTreeDataProvider('leetcodePractice.daily', daily),
     vscode.window.onDidChangeActiveTextEditor((editor) => void trackSolutionContext(editor)),
-    vscode.commands.registerCommand('leetcodePractice.signIn', () =>
-      signIn(auth, () => webAuth.start()),
+    vscode.commands.registerCommand('leetcodePractice.signIn', () => webAuth.start()),
+    vscode.commands.registerCommand('leetcodePractice.signInWithCookie', () =>
+      signInWithPastedCookie(auth),
     ),
     vscode.commands.registerCommand('leetcodePractice.signOut', () => signOut(auth)),
     vscode.commands.registerCommand('leetcodePractice.refreshDaily', () => daily.refresh()),
@@ -88,10 +94,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       return openProblem(context, api, problemPanel, slug);
     }),
     vscode.commands.registerCommand('leetcodePractice.testSolution', () =>
-      runSolution(judge, resultPanel, 'test'),
+      runSolution(judge, results, 'test'),
     ),
     vscode.commands.registerCommand('leetcodePractice.submitSolution', () =>
-      runSolution(judge, resultPanel, 'submit'),
+      runSolution(judge, results, 'submit'),
     ),
     vscode.commands.registerCommand('leetcodePractice.showOutput', () => log.show()),
   );
