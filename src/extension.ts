@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { changeLanguage } from './commands/changeLanguage';
+import { changeDefaultLanguage, clearCache, showStatement } from './commands/maintenance';
 import { openProblem } from './commands/openProblem';
 import { runSolution } from './commands/runSolution';
 import { showSolutions } from './commands/showSolutions';
@@ -111,6 +112,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }),
     vscode.commands.registerCommand('leetcodePractice.changeLanguage', () =>
       changeLanguage(context, api),
+    ),
+    vscode.commands.registerCommand('leetcodePractice.showStatement', () =>
+      showStatement(api, problemPanel),
+    ),
+    vscode.commands.registerCommand('leetcodePractice.changeDefaultLanguage', () =>
+      changeDefaultLanguage(),
+    ),
+    vscode.commands.registerCommand('leetcodePractice.clearCache', () =>
+      clearCache(context, catalogue),
     ),
     vscode.commands.registerCommand('leetcodePractice.showSolutions', () =>
       showSolutions(context, api),

@@ -150,6 +150,10 @@ module, so a VSIX is platform specific.
 | `leetcodePractice.defaultLanguage` | Which language template a problem opens with (`python3`, `cpp`, `rust`, …). |
 | `leetcodePractice.studyPlans` | Which study plans the sidebar shows, by the slug in their URL. |
 
+Three commands have no button, and live in the palette: **Change Default
+Language**, **Sign In with Cookie**, and **Clear Cache**, which throws away the
+cached problem list and any solutions read without touching your own files.
+
 ### Reading other people's solutions
 
 The discussion button in the editor title bar lists the most upvoted community

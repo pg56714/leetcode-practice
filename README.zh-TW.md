@@ -121,6 +121,10 @@ session 幾週後會過期，屆時 Test / Submit 會開始出現「session may 
 | `leetcodePractice.defaultLanguage` | 開題時用哪個語言的模板（`python3`、`cpp`、`rust`…） |
 | `leetcodePractice.studyPlans` | 側邊欄要顯示哪些學習計畫，用網址裡的 slug |
 
+有三個指令沒有按鈕、只在命令面板裡：**Change Default Language**、
+**Sign In with Cookie**、以及 **Clear Cache**（丟掉題庫快取與讀過的解答，
+不會動到你自己的檔案）。
+
 ### 看別人的解法
 
 編輯器標題列的討論按鈕會列出這題最多讚的社群解答（含讚數、瀏覽、留言數），

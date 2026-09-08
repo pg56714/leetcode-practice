@@ -135,6 +135,19 @@
         "command": "leetcodePractice.showSolutions",
         "title": "LeetCode Practice: Show Community Solutions",
         "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "leetcodePractice.showStatement",
+        "title": "LeetCode Practice: Show Problem Statement",
+        "icon": "$(book)"
+      },
+      {
+        "command": "leetcodePractice.changeDefaultLanguage",
+        "title": "LeetCode Practice: Change Default Language"
+      },
+      {
+        "command": "leetcodePractice.clearCache",
+        "title": "LeetCode Practice: Clear Cache"
       }
     ],
     "menus": {
@@ -176,6 +189,11 @@
         }
       ],
       "editor/title": [
+        {
+          "command": "leetcodePractice.showStatement",
+          "when": "leetcodePractice.isSolution",
+          "group": "navigation@0"
+        },
         {
           "command": "leetcodePractice.changeLanguage",
           "when": "leetcodePractice.isSolution",

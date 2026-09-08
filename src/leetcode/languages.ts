@@ -31,6 +31,9 @@ const EXTENSION_BY_SLUG: Record<string, string> = {
   postgresql: 'sql',
 };
 
+/** Every language slug this extension knows how to name a file for. */
+export const SUPPORTED_LANGUAGES = Object.keys(EXTENSION_BY_SLUG);
+
 export function extensionFor(langSlug: string): string {
   return EXTENSION_BY_SLUG[langSlug] ?? 'txt';
 }
