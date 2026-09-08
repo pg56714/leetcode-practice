@@ -85,3 +85,43 @@ export const QUESTION_DETAIL = `
     }
   }
 `;
+
+/**
+ * One study plan with its groups and problems.
+ *
+ * Note the shape mismatches with the problem set: `difficulty` comes back upper
+ * case here, and `status` is "TO_DO" or "PAST_SOLVED" rather than null or "ac".
+ * Also `paidOnly`, not `isPaidOnly`.
+ */
+export const STUDY_PLAN_DETAIL = `
+  query studyPlanDetail($slug: String!) {
+    studyPlanV2Detail(planSlug: $slug) {
+      slug
+      name
+      questionNum
+      planSubGroups {
+        name
+        questions {
+          questionFrontendId
+          title
+          titleSlug
+          difficulty
+          status
+          paidOnly
+        }
+      }
+    }
+  }
+`;
+
+/** Contests that have not started yet. Takes no arguments. */
+export const UPCOMING_CONTESTS = `
+  query upcomingContests {
+    upcomingContests {
+      title
+      titleSlug
+      startTime
+      duration
+    }
+  }
+`;

@@ -58,6 +58,14 @@ with "the session may have expired" and you sign in again.
 ### The sidebar
 
 - **Daily Challenge** — today's problem, one row
+- **Study Plans** — LeetCode's own plans (Top Interview 150, LeetCode 75, and
+  the rest), as plan then section then problem, with how many of each you have
+  solved. LeetCode has no query that lists the available plans, so the ones to
+  show are named in `leetcodePractice.studyPlans`.
+- **Contests** — the contests that have not started yet, with how long until
+  they do. Rows open the contest page in a browser: a contest's problems do not
+  exist in the API until it starts, and taking part means the timer and the
+  scoreboard.
 - **Problems** — the whole set, over 4,000 problems, searchable. The list is
   cached on disk and only refetched in the background once it is a week old.
   Unfiltered it renders the first 500 rows, because nobody scrolls four thousand
@@ -102,6 +110,14 @@ focus, so the cursor lands where the typing happens.
 - The statement panel loads no scripts, behind a content security policy that
   allows inline styles and remote images only.
 
+### Switching language
+
+The button in the editor title bar lists the languages that problem offers, 19
+of them for most. Picking one writes that language's template beside the
+existing file rather than replacing it, so a problem can hold `main.py` and
+`main.rs` at once — redoing a solved problem in another language is a practice
+technique, not an accident. Test and Submit use whichever file is open.
+
 ### Testing and submitting
 
 With a solution file open, `Ctrl+;` runs it against the cases in
@@ -132,11 +148,10 @@ module, so a VSIX is platform specific.
 | --- | --- |
 | `leetcodePractice.storagePath` | Where problem folders are created. Empty means `solutions/` under the first workspace folder. |
 | `leetcodePractice.defaultLanguage` | Which language template a problem opens with (`python3`, `cpp`, `rust`, …). |
+| `leetcodePractice.studyPlans` | Which study plans the sidebar shows, by the slug in their URL. |
 
 ## Not yet built
 
-- [ ] Per-problem language switching
-- [ ] Study lists and contests
 - [ ] Discussions
 
 ## Developing

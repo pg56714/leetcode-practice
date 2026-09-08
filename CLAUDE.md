@@ -86,6 +86,17 @@ Found by probing. None of it appears in any official documentation:
 - A failed submission also carries `input_formatted`, the failing case with its
   arguments on one line ("[2,7,11,15], 9"), which reads better than
   `last_testcase`'s one-per-line form
+- Study plans answer with their own conventions: `difficulty` upper case
+  ("EASY"), `status` as "TO_DO" or "PAST_SOLVED" rather than null or "ac", and
+  `paidOnly` rather than `isPaidOnly`. Normalise at the boundary
+- **There is no working query for listing study plans.** `studyPlansV2ByCatalog`
+  takes `catalogSlug: String!` and answers zero for every slug tried, and
+  introspection is disabled ("Query unavailable"), so plans have to be named.
+  These nine resolve through `studyPlanV2Detail`: top-interview-150,
+  leetcode-75, top-100-liked, top-sql-50, programming-skills,
+  dynamic-programming, graph-theory, binary-search, 30-days-of-javascript
+- `favoritesLists` exists but its official lists are internal oddities
+  (Ascension I, Challenge I), not the plans anyone recognises
 - An `interpret_id` looks like `runcode_1788854646.6059482_R6qaNhtKMm`, not a
   number, so it is a string
 

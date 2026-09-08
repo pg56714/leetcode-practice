@@ -48,6 +48,11 @@ session 幾週後會過期，屆時 Test / Submit 會開始出現「session may 
 ### 側邊欄
 
 - **Daily Challenge** — 今天的每日挑戰題，一列
+- **Study Plans** — LeetCode 官方的學習計畫（Top Interview 150、LeetCode 75 等），
+  依「計畫 → 章節 → 題目」展開，並顯示各計畫解出幾題。
+  LeetCode 沒有可用的「列出所有計畫」查詢，所以要顯示哪些寫在 `leetcodePractice.studyPlans` 設定裡。
+- **Contests** — 尚未開始的比賽與倒數。點擊開瀏覽器：比賽開始前題目在 API 上並不存在，
+  而且參賽本身要看計時與排行榜。
 - **Problems** — 全題庫 4,000 多題，可搜尋。清單快取在磁碟，超過 7 天才在背景重抓；
   未搜尋時只列前 500 題（四千列沒人會滑，搜尋才是入口）。
   搜尋純數字時比對題號前綴，所以打 `17` 會看到 17、170、171… 而不是被 1700 系列淹沒
@@ -85,6 +90,12 @@ session 幾週後會過期，屆時 Test / Submit 會開始出現「session may 
   不是一包「可能會用到」的清單
 - 題目說明面板不載入任何 script，CSP 只允許行內樣式與遠端圖片
 
+### 切換語言
+
+編輯器標題列的按鈕會列出這題支援的語言（多數題目 19 種）。選了之後，新語言的模板會
+**寫在原檔案旁邊**而不是取代它 —— 同一題可以同時有 `main.py` 和 `main.rs`，
+因為「用另一個語言重寫解過的題」是練習方法，不是意外。Test / Submit 一律看你開著哪個檔案。
+
 ### 測試與提交
 
 開著解題檔時，`Ctrl+;` 拿 `testcases.txt` 的測資跑一次、`Ctrl+Enter` 正式提交，
@@ -107,11 +118,10 @@ session 幾週後會過期，屆時 Test / Submit 會開始出現「session may 
 | --- | --- |
 | `leetcodePractice.storagePath` | 題目資料夾建在哪。留空則用第一個 workspace 資料夾底下的 `solutions/` |
 | `leetcodePractice.defaultLanguage` | 開題時用哪個語言的模板（`python3`、`cpp`、`rust`…） |
+| `leetcodePractice.studyPlans` | 側邊欄要顯示哪些學習計畫，用網址裡的 slug |
 
 ## 還沒做
 
-- [ ] 每題語言切換
-- [ ] Study Lists、Contests
 - [ ] 討論區
 
 ## 開發
