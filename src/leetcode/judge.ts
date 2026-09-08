@@ -57,6 +57,8 @@ interface CheckPayload {
   full_runtime_error?: string;
   /** Submissions: the case that failed, empty when none did. */
   last_testcase?: string;
+  /** The same case with arguments on one line, e.g. "[2,7,11,15], 9". */
+  input_formatted?: string;
   expected_output?: string;
 }
 
@@ -153,8 +155,11 @@ export function readResult(payload: unknown): JudgeResult {
     result.runtimeError = runtime;
   }
 
-  if (data.last_testcase !== undefined && data.last_testcase !== '') {
-    result.failedInput = data.last_testcase;
+  // input_formatted puts the arguments on one line, which reads better than
+  // last_testcase's one-per-line form; it is only there on submissions.
+  const failing = data.input_formatted ?? data.last_testcase;
+  if (failing !== undefined && failing !== '') {
+    result.failedInput = failing;
   }
   if (data.expected_output !== undefined && data.expected_output !== '') {
     result.failedExpected = data.expected_output;

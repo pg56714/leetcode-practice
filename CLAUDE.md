@@ -83,6 +83,11 @@ Found by probing. None of it appears in any official documentation:
 - A submission answers with `last_testcase` and `expected_output` instead of the
   per-case arrays, empty when nothing failed
 - Two judge runs in quick succession is enough for a 429
+- A failed submission also carries `input_formatted`, the failing case with its
+  arguments on one line ("[2,7,11,15], 9"), which reads better than
+  `last_testcase`'s one-per-line form
+- An `interpret_id` looks like `runcode_1788854646.6059482_R6qaNhtKMm`, not a
+  number, so it is a string
 
 ## Verifying
 

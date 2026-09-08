@@ -193,8 +193,16 @@ if (process.env.INCLUDE_FAILING_SUBMIT === '1') {
   plan.push(['6. submit, wrong answer (recorded!)', WRONG, runSubmit]);
 }
 
+// ONLY=3 reruns a single shape, which is what recording one more case needs.
+const only = process.env.ONLY;
+const selected = only === undefined ? plan : plan.filter(([label]) => label.startsWith(only));
+if (selected.length === 0) {
+  console.error(`ONLY=${only} matched none of: ${plan.map(([l]) => l).join(', ')}`);
+  process.exit(1);
+}
+
 const results = [];
-for (const [label, code, run] of plan) {
+for (const [label, code, run] of selected) {
   if (results.length > 0) {
     await wait(GAP_MS);
   }
