@@ -6,3 +6,7 @@ out/
 
 # Judge payload dumps from scripts/probe-judge-shapes.mjs
 judge-shapes*.json
+
+# Local credentials for scripts/probe-judge-shapes.mjs
+.env
+.env.*

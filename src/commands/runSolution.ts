@@ -145,7 +145,7 @@ export async function runSolution(
 
         const result = readResult(payload);
         panel.show(heading, result, splitCases(input, metadata.linesPerCase));
-        log.info(`${mode === 'test' ? 'Test' : 'Submission'} finished: ${result.statusMessage}`);
+        log.info(`${mode === 'test' ? 'Test' : 'Submission'} finished: ${result.verdict}`);
       },
     );
   } catch (err) {

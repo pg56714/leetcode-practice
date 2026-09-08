@@ -67,6 +67,22 @@ Found by probing. None of it appears in any official documentation:
 - Signed out, `userStatus.isPremium` comes back `null` rather than `false`
 - A problem's `status` (solved or not) is only populated for a request carrying
   valid cookies; anonymously it is always `null`
+- The judge endpoints (`interpret_solution`, `submit`, `check`) sit behind bot
+  mitigation that fingerprints the TLS handshake. Node's own fetch gets 403 with
+  `cf-mitigated: challenge` on all three, browser headers or not
+- **A test run reports `status_msg: "Accepted"` whenever the code merely ran**,
+  whatever it returned. Correctness lives in `correct_answer` (test runs only)
+  and `total_correct`. A submission carries no `correct_answer` and does mean
+  what `status_msg` says
+- Per-case arrays (`code_answer`, `expected_code_answer`, `std_output_list`)
+  carry one trailing empty entry beyond the number of cases
+- Python syntax errors come back as `Runtime Error` with `full_runtime_error`,
+  not as a compile error
+- `code_output` is an array on a test run and a string on a submission;
+  `std_output_list` (array) becomes `std_output` (string) the same way
+- A submission answers with `last_testcase` and `expected_output` instead of the
+  per-case arrays, empty when nothing failed
+- Two judge runs in quick succession is enough for a 429
 
 ## Verifying
 

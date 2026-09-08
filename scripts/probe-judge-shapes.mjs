@@ -50,10 +50,28 @@ const EMPTY = `class Solution:
     def twoSum(self, nums, target):
         pass`;
 
-const cookie = process.env.LEETCODE_COOKIE;
+/**
+ * The session, from either shape people keep it in: one pasted Cookie header,
+ * or the two values as separate variables in a .env file.
+ */
+function readCookieFromEnvironment() {
+  const whole = process.env.LEETCODE_COOKIE;
+  if (whole !== undefined && whole.trim() !== '') {
+    return whole;
+  }
+  const session = process.env.LEETCODE_SESSION;
+  const csrf = process.env.csrftoken ?? process.env.CSRFTOKEN;
+  if (session !== undefined && csrf !== undefined) {
+    return `LEETCODE_SESSION=${session}; csrftoken=${csrf}`;
+  }
+  return undefined;
+}
+
+const cookie = readCookieFromEnvironment();
 if (cookie === undefined || cookie.trim() === '') {
-  console.error('Set LEETCODE_COOKIE first. In PowerShell:');
-  console.error("  $env:LEETCODE_COOKIE = 'LEETCODE_SESSION=...; csrftoken=...'");
+  console.error('No session found. Either set LEETCODE_COOKIE, or put');
+  console.error('LEETCODE_SESSION and csrftoken in a .env file and run with');
+  console.error('  node --env-file=.env scripts/probe-judge-shapes.mjs');
   process.exit(1);
 }
 
@@ -92,13 +110,27 @@ const headers = {
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function post(path, body) {
+/**
+ * Starts a run, backing off when LeetCode rate limits.
+ *
+ * Judge submissions are throttled per account — measured at 429 after two runs
+ * in quick succession — so the interesting part of a rate limit is how long to
+ * wait, not the error text.
+ */
+async function post(path, body, attempt = 1) {
   const res = await impit.fetch(`${ORIGIN}${path}`, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
   });
   const text = await res.text();
+
+  if (res.status === 429 && attempt <= 5) {
+    const pause = attempt * 15_000;
+    process.stdout.write(`rate limited, waiting ${pause / 1000}s … `);
+    await wait(pause);
+    return post(path, body, attempt + 1);
+  }
   if (!res.ok) {
     throw new Error(`HTTP ${res.status} on ${path}: ${text.slice(0, 200)}`);
   }
@@ -146,15 +178,27 @@ async function runSubmit(label, code) {
   return { label, mode: 'submit', started, payload };
 }
 
-const results = [];
-results.push(await runTest('1. test, empty body', EMPTY));
-results.push(await runTest('2. test, wrong answer', WRONG));
-results.push(await runTest('3. test, syntax error', BROKEN));
-results.push(await runTest('4. test, correct', CORRECT));
-results.push(await runSubmit('5. submit, correct', CORRECT));
+// Spaced out on purpose: back-to-back runs trip the per-account throttle, and
+// waiting is cheaper than retrying.
+const GAP_MS = 12_000;
 
+const plan = [
+  ['1. test, empty body', EMPTY, runTest],
+  ['2. test, wrong answer', WRONG, runTest],
+  ['3. test, syntax error', BROKEN, runTest],
+  ['4. test, correct', CORRECT, runTest],
+  ['5. submit, correct', CORRECT, runSubmit],
+];
 if (process.env.INCLUDE_FAILING_SUBMIT === '1') {
-  results.push(await runSubmit('6. submit, wrong answer (recorded!)', WRONG));
+  plan.push(['6. submit, wrong answer (recorded!)', WRONG, runSubmit]);
+}
+
+const results = [];
+for (const [label, code, run] of plan) {
+  if (results.length > 0) {
+    await wait(GAP_MS);
+  }
+  results.push(await run(label, code));
 }
 
 // Nothing leaves here carrying a credential, whatever LeetCode echoed back.

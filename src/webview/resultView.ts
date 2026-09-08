@@ -101,7 +101,7 @@ export class ResultView implements vscode.WebviewViewProvider {
     ].filter((part) => part !== '');
 
     const summary = `
-      <p class="verdict ${result.accepted ? 'ok' : 'bad'}">${escapeHtml(result.statusMessage)}</p>
+      <p class="verdict ${result.accepted ? 'ok' : 'bad'}">${escapeHtml(result.verdict)}</p>
       <p class="stats">${[counted, ...timing].filter((part) => part !== '').join(' · ')}</p>`;
 
     const sections = [

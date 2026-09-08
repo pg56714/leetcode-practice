@@ -145,6 +145,13 @@ export class JudgeApi {
       if (challenged(response)) {
         throw new CloudflareChallenge();
       }
+      // Measured: two judge runs in quick succession is enough to get a 429,
+      // and the useful part of that is how long to wait, not the status code.
+      if (response.status === 429) {
+        throw new JudgeRequestError(
+          'LeetCode is rate limiting judge runs. Wait a few seconds and try again.',
+        );
+      }
       if (response.status === 401 || response.status === 403 || response.status === 499) {
         throw new JudgeRequestError(
           `LeetCode rejected the request (HTTP ${response.status}). The session may have expired — sign in again.`,
