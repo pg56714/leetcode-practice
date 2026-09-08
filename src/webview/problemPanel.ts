@@ -111,8 +111,9 @@ function render(detail: ProblemDetail): string {
     font-size: var(--vscode-font-size);
     color: var(--vscode-foreground);
     line-height: 1.6;
-    padding: 0 1.4rem 3rem;
-    max-width: 52rem;
+    padding: 0 1.6rem 3rem;
+    max-width: 46rem;
+    margin: 0 auto;
   }
   h1.title { font-size: 1.35rem; margin: 1.2rem 0 0.4rem; }
   .meta { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 1.2rem; }

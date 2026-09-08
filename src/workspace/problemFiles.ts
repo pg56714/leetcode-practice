@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { extensionFor } from '../leetcode/languages';
 import type { ProblemDetail } from '../leetcode/types';
 import { log } from '../log';
+import { completeTemplate } from './templates';
 
 /** What a problem folder holds, and what phase 4 needs to submit from it. */
 export interface ProblemMetadata {
@@ -120,7 +121,8 @@ export async function createProblemFolder(
 
   const alreadyThere = await exists(solution);
   if (!alreadyThere) {
-    await writeText(solution, code.endsWith('\n') ? code : `${code}\n`);
+    const template = completeTemplate(langSlug, code);
+    await writeText(solution, template.endsWith('\n') ? template : `${template}\n`);
   }
 
   const testcases = vscode.Uri.joinPath(folder, TESTCASES_NAME);
