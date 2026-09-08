@@ -16,7 +16,9 @@
     "Education",
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onUri"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "viewsContainers": {

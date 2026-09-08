@@ -15,11 +15,21 @@ what to redo and when.
 
 ### Signing in
 
-Click the status bar or the sidebar, then paste the Cookie header from a
-signed-in browser. Credentials live in VS Code's secret storage, scoped to this
-extension, so they never reach a settings file. **They are checked against
-LeetCode before being stored**, so a bad or expired paste fails immediately
-rather than at the first submission.
+Click the status bar or the sidebar and pick one of two ways in:
+
+- **Authorise in browser** — opens LeetCode, which hands the session straight
+  back to VS Code. Nothing to copy.
+- **Paste cookie** — copy the Cookie header out of your browser DevTools.
+
+Credentials live in VS Code's secret storage, scoped to this extension, so they
+never reach a settings file. **They are checked against LeetCode before being
+stored**, so a bad or expired session fails immediately rather than at the first
+submission.
+
+The browser handoff returns the session in a URL, so a callback is accepted only
+while an authorisation started here is still open (five minutes), only when
+addressed to this extension, and only once. Otherwise any link could hand the
+extension somebody else's session.
 
 ### The sidebar
 
