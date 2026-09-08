@@ -66,6 +66,20 @@ export class ResultPanel {
     this.render(title, '<p class="waiting">Waiting for LeetCode…</p>');
   }
 
+  /**
+   * Shows why nothing was judged.
+   *
+   * The waiting placeholder must never be the last thing on screen: a panel
+   * still saying "waiting" after a request failed is indistinguishable from a
+   * hang, and the reader has no reason to go looking in a dismissed toast.
+   */
+  failed(title: string, message: string): void {
+    this.render(
+      title,
+      `<p class="verdict bad">Not judged</p><p class="stats">${escapeHtml(message)}</p>`,
+    );
+  }
+
   show(title: string, result: JudgeResult, input: string[]): void {
     const summary = `
       <p class="verdict ${result.accepted ? 'ok' : 'bad'}">${escapeHtml(result.statusMessage)}</p>

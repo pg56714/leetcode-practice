@@ -37,9 +37,23 @@ async function copyPackage(name) {
     return false;
   }
   const to = join(TARGET, name);
-  await rm(to, { recursive: true, force: true });
-  await cp(from, to, { recursive: true });
-  console.log(`copied ${name}`);
+  try {
+    await rm(to, { recursive: true, force: true });
+    await cp(from, to, { recursive: true });
+    console.log(`copied ${name}`);
+  } catch (err) {
+    // A running Extension Development Host has the .node binary mapped into
+    // memory, and Windows will not let a mapped file be replaced. The copy
+    // already there is the one that host is using, so keeping it is correct —
+    // only a version change makes it stale, hence the warning.
+    const code = /** @type {{ code?: string }} */ (err).code;
+    if ((code === 'EPERM' || code === 'EBUSY') && existsSync(to)) {
+      console.warn(`kept existing ${name}: in use, probably by a running Extension Development Host`);
+      console.warn('  close it and rebuild if the dependency version changed');
+    } else {
+      throw err;
+    }
+  }
   return true;
 }
 

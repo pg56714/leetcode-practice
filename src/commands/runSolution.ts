@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { isSettled, readResult } from '../leetcode/judge';
 import { languageForExtension } from '../leetcode/languages';
-import { CloudflareChallenge, type JudgeApi } from '../leetcode/rest';
+import type { JudgeApi } from '../leetcode/rest';
 import { log } from '../log';
 import type { ResultPanel } from '../webview/resultPanel';
 import { readMetadata, readTestCases } from '../workspace/problemFiles';
@@ -85,6 +85,19 @@ export async function runSolution(
     return;
   }
 
+  // Checked before anything is rendered: judging without credentials fails at
+  // the first header, and an offer to sign in is more use than that error.
+  if (!(await judge.hasCredentials())) {
+    const choice = await vscode.window.showWarningMessage(
+      'Sign in to LeetCode before testing or submitting.',
+      'Sign In',
+    );
+    if (choice === 'Sign In') {
+      await vscode.commands.executeCommand('leetcodePractice.signIn');
+    }
+    return;
+  }
+
   const lang = languageForExtension(file.fsPath, metadata.lang);
   const code = editor.document.getText();
   if (code.trim() === '') {
@@ -126,6 +139,7 @@ export async function runSolution(
         const payload = await pollUntilDone(judge, metadata.titleSlug, id, token);
         if (payload === undefined) {
           log.info('Judging cancelled');
+          panel.failed(heading, 'Cancelled.');
           return;
         }
 
@@ -137,8 +151,9 @@ export async function runSolution(
   } catch (err) {
     log.error(`${mode === 'test' ? 'Test' : 'Submission'} failed`, err);
     const message = err instanceof Error ? err.message : String(err);
-    const actions = err instanceof CloudflareChallenge ? ['Show Output'] : ['Show Output'];
-    const choice = await vscode.window.showErrorMessage(message, ...actions);
+    panel.failed(heading, message);
+
+    const choice = await vscode.window.showErrorMessage(message, 'Show Output');
     if (choice === 'Show Output') {
       log.show();
     }

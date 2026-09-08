@@ -28,6 +28,8 @@ interface RestRequest {
 
 type Transport = (url: string, request: RestRequest) => Promise<RestResponse>;
 
+const REQUEST_TIMEOUT_MS = 20_000;
+
 let transport: Transport | undefined;
 
 /**
@@ -53,7 +55,9 @@ function resolveTransport(): Transport {
 
   try {
     const { Impit } = require('impit') as typeof import('impit');
-    const impit = new Impit({ browser: 'chrome' });
+    // Without a timeout a stalled request hangs the progress notification
+    // forever, which reads as a frozen extension rather than a slow network.
+    const impit = new Impit({ browser: 'chrome', timeout: REQUEST_TIMEOUT_MS });
     transport = (url, request) => impit.fetch(url, request) as unknown as Promise<RestResponse>;
     log.info('Judge transport: impit');
   } catch (err) {
@@ -93,6 +97,11 @@ function challenged(response: RestResponse): boolean {
 
 export class JudgeApi {
   constructor(private readonly session: Session) {}
+
+  /** Whether there are credentials to send at all. */
+  async hasCredentials(): Promise<boolean> {
+    return (await this.session.read()) !== undefined;
+  }
 
   /**
    * Headers a browser stamps on these requests.
