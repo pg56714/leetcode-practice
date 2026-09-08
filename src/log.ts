@@ -23,6 +23,22 @@ export const log = {
   },
 
   /**
+   * Logs a payload worth inspecting when something looks wrong.
+   *
+   * Judge responses change shape depending on how far a run got, so the raw
+   * payload goes here: when the panel renders something unexpected, the answer
+   * is in the output channel rather than in a guess.
+   */
+  debug(message: string, payload?: unknown): void {
+    const body =
+      payload === undefined
+        ? ''
+        : `
+${JSON.stringify(payload, null, 2)}`;
+    out().appendLine(`${stamp()}  ${message}${body}`);
+  },
+
+  /**
    * Logs an error. `detail` is anything caught in a try/catch — Error, string,
    * or some unknown thrown value — and is reduced to a single readable line.
    */

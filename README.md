@@ -68,6 +68,28 @@ focus, so the cursor lands where the typing happens.
 - The statement panel loads no scripts, behind a content security policy that
   allows inline styles and remote images only.
 
+### Testing and submitting
+
+With a solution file open, `Ctrl+;` runs it against the cases in
+`testcases.txt` and `Ctrl+Enter` submits it; both also sit as buttons in the
+editor title bar. Results appear in a panel beside the code: verdict, timing,
+each case next to its expected output, and compile or runtime errors when there
+are any. A submission asks for confirmation first, since it is recorded against
+the account.
+
+The language comes from the file's own extension, not the folder's metadata: a
+problem can hold `main.py` and `main.rs` at once, and the one being submitted
+is the one in front of you.
+
+**Cloudflare.** The judge endpoints are behind bot mitigation that fingerprints
+the TLS handshake before reading a single header — measured on
+`interpret_solution`, `submit` and `check`, all three answer 403 with
+`cf-mitigated: challenge` from Node's own HTTP stack, browser headers or not.
+This extension therefore sends those three requests through
+[impit](https://github.com/apify/impit), which performs the handshake as Chrome
+would; the same endpoints then answer from LeetCode itself. impit is a native
+module, so a VSIX is platform specific.
+
 ## Settings
 
 | Setting | What it does |
@@ -77,7 +99,6 @@ focus, so the cursor lands where the typing happens.
 
 ## Not yet built
 
-- [ ] Test and Submit
 - [ ] Per-problem language switching
 - [ ] Study lists and contests
 - [ ] Discussions

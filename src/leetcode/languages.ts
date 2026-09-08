@@ -38,3 +38,26 @@ export function extensionFor(langSlug: string): string {
 export function isKnownLanguage(langSlug: string): boolean {
   return langSlug in EXTENSION_BY_SLUG;
 }
+
+/**
+ * The language slug for a solution file.
+ *
+ * A problem folder can hold main.py and main.rs at the same time, so the file
+ * being submitted decides the language, not the folder's metadata. The metadata
+ * still wins when its own language uses this extension, which is what keeps
+ * .sql submitting as the dialect the reader chose rather than a guess.
+ */
+export function languageForExtension(filePath: string, fallback: string): string {
+  const dot = filePath.lastIndexOf('.');
+  const extension = dot === -1 ? '' : filePath.slice(dot + 1).toLowerCase();
+
+  if (extension === '') {
+    return fallback;
+  }
+  if (EXTENSION_BY_SLUG[fallback] === extension) {
+    return fallback;
+  }
+
+  const match = Object.entries(EXTENSION_BY_SLUG).find(([, ext]) => ext === extension);
+  return match?.[0] ?? fallback;
+}

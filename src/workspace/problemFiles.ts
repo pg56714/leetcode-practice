@@ -159,3 +159,20 @@ export async function readMetadata(solution: vscode.Uri): Promise<ProblemMetadat
     return undefined;
   }
 }
+
+/**
+ * Reads the test cases beside a solution file.
+ *
+ * Hand edits are the point of the file existing, so whatever is in it wins;
+ * an empty or missing file yields an empty string, which LeetCode rejects with
+ * a clear message of its own.
+ */
+export async function readTestCases(solution: vscode.Uri): Promise<string> {
+  const uri = vscode.Uri.joinPath(solution, '..', TESTCASES_NAME);
+  try {
+    const raw = await vscode.workspace.fs.readFile(uri);
+    return new TextDecoder().decode(raw).trim();
+  } catch {
+    return '';
+  }
+}

@@ -77,6 +77,16 @@
       {
         "command": "leetcodePractice.openProblem",
         "title": "LeetCode Practice: Open Problem"
+      },
+      {
+        "command": "leetcodePractice.testSolution",
+        "title": "LeetCode Practice: Test Solution",
+        "icon": "$(play)"
+      },
+      {
+        "command": "leetcodePractice.submitSolution",
+        "title": "LeetCode Practice: Submit Solution",
+        "icon": "$(cloud-upload)"
       }
     ],
     "menus": {
@@ -106,6 +116,18 @@
           "when": "view == leetcodePractice.problems",
           "group": "navigation@3"
         }
+      ],
+      "editor/title": [
+        {
+          "command": "leetcodePractice.testSolution",
+          "when": "leetcodePractice.isSolution",
+          "group": "navigation@1"
+        },
+        {
+          "command": "leetcodePractice.submitSolution",
+          "when": "leetcodePractice.isSolution",
+          "group": "navigation@2"
+        }
       ]
     },
     "configuration": {
@@ -122,13 +144,27 @@
           "description": "Language slug used when opening a problem (e.g. python3, cpp, rust)."
         }
       }
-    }
+    },
+    "keybindings": [
+      {
+        "command": "leetcodePractice.testSolution",
+        "key": "ctrl+;",
+        "mac": "cmd+;",
+        "when": "editorTextFocus && leetcodePractice.isSolution"
+      },
+      {
+        "command": "leetcodePractice.submitSolution",
+        "key": "ctrl+enter",
+        "mac": "cmd+enter",
+        "when": "editorTextFocus && leetcodePractice.isSolution"
+      }
+    ]
   },
   "packageManager": "bun@1.3.14",
   "scripts": {
-    "compile": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap",
+    "compile": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:impit --format=cjs --platform=node --sourcemap && node scripts/copy-native-deps.mjs",
     "watch": "bun run compile -- --watch",
-    "package": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify",
+    "package": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:impit --format=cjs --platform=node --minify && node scripts/copy-native-deps.mjs",
     "vscode:prepublish": "bun run package",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "biome check src",
@@ -142,6 +178,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "impit": "^0.14.5",
     "xss": "^1.0.15"
   }
 }

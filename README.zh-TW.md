@@ -57,6 +57,21 @@
   不是一包「可能會用到」的清單
 - 題目說明面板不載入任何 script，CSP 只允許行內樣式與遠端圖片
 
+### 測試與提交
+
+開著解題檔時，`Ctrl+;` 拿 `testcases.txt` 的測資跑一次、`Ctrl+Enter` 正式提交，
+兩個也都在編輯器標題列有按鈕。結果顯示在旁邊的面板：判定、時間記憶體、
+每組測資與預期輸出並排、以及編譯或執行期錯誤。提交會先問一次，因為那會記在你的帳號上。
+
+語言看**檔案本身的副檔名**，不是資料夾的 metadata —— 同一題可以同時有 `main.py`
+和 `main.rs`，你在哪個檔案按提交就送那個語言。
+
+**關於 Cloudflare**：判題端點有機器人防護，它在讀任何標頭之前先驗 TLS 指紋 ——
+實測 `interpret_solution`、`submit`、`check` 三個端點，用 Node 自己的 HTTP 堆疊
+（不管有沒有加瀏覽器標頭）全部回 403 加 `cf-mitigated: challenge`。
+所以這三個請求走 [impit](https://github.com/apify/impit)，它以 Chrome 的方式完成握手，
+同樣的端點就會由 LeetCode 自己回應。impit 是原生模組，所以 VSIX 是分平台的。
+
 ## 設定
 
 | 設定 | 說明 |
@@ -66,7 +81,6 @@
 
 ## 還沒做
 
-- [ ] Test / Submit
 - [ ] 每題語言切換
 - [ ] Study Lists、Contests
 - [ ] 討論區

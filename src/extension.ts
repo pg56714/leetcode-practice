@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 import { openProblem } from './commands/openProblem';
+import { runSolution } from './commands/runSolution';
 import { Api, ORIGIN } from './leetcode/api';
 import { Catalogue } from './leetcode/catalogue';
+import { JudgeApi } from './leetcode/rest';
 import { Session } from './leetcode/session';
 import type { UserStatus } from './leetcode/types';
 import { log } from './log';
@@ -9,6 +11,8 @@ import { StatusBar } from './ui/statusBar';
 import { DailyChallengeView } from './views/dailyChallenge';
 import { ProblemsView } from './views/problems';
 import { ProblemPanel } from './webview/problemPanel';
+import { ResultPanel } from './webview/resultPanel';
+import { readMetadata } from './workspace/problemFiles';
 
 /** Drives the "signed in" context key, which gates view/title buttons. */
 async function publishStatus(api: Api, statusBar: StatusBar): Promise<UserStatus | undefined> {
@@ -114,6 +118,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const daily = new DailyChallengeView(api);
   const problems = new ProblemsView(catalogue);
   const panel = new ProblemPanel();
+  const results = new ResultPanel();
+  const judge = new JudgeApi(session);
 
   const problemsView = vscode.window.createTreeView('leetcodePractice.problems', {
     treeDataProvider: problems,
@@ -131,6 +137,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     statusBar,
     daily,
     panel,
+    results,
     problems,
     catalogue,
     problemsView,
@@ -157,8 +164,30 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       }
       return openProblem(context, api, panel, slug);
     }),
+    vscode.commands.registerCommand('leetcodePractice.testSolution', () =>
+      runSolution(judge, results, 'test'),
+    ),
+    vscode.commands.registerCommand('leetcodePractice.submitSolution', () =>
+      runSolution(judge, results, 'submit'),
+    ),
     vscode.commands.registerCommand('leetcodePractice.showOutput', () => log.show()),
   );
+
+  // The Test and Submit buttons only make sense on a file inside a problem
+  // folder, and that is decided by the metadata sitting next to it.
+  const trackSolutionContext = async (editor: vscode.TextEditor | undefined): Promise<void> => {
+    const metadata = editor === undefined ? undefined : await readMetadata(editor.document.uri);
+    await vscode.commands.executeCommand(
+      'setContext',
+      'leetcodePractice.isSolution',
+      metadata !== undefined,
+    );
+  };
+
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor((editor) => void trackSolutionContext(editor)),
+  );
+  void trackSolutionContext(vscode.window.activeTextEditor);
 
   await publishStatus(api, statusBar);
   void catalogue.prime();
