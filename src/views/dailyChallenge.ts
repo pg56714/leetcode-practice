@@ -1,13 +1,8 @@
 import * as vscode from 'vscode';
-import { Api, problemUrl } from '../leetcode/api';
-import { DailyChallenge } from '../leetcode/types';
+import { type Api, problemUrl } from '../leetcode/api';
+import type { DailyChallenge } from '../leetcode/types';
 import { log } from '../log';
-
-const DIFFICULTY_ICON: Record<string, string> = {
-  Easy: 'circle-outline',
-  Medium: 'circle-large-outline',
-  Hard: 'flame',
-};
+import { problemIcon } from '../ui/icons';
 
 /**
  * The Daily Challenge view.
@@ -20,7 +15,10 @@ export class DailyChallengeView implements vscode.TreeDataProvider<vscode.TreeIt
   private readonly changed = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this.changed.event;
 
-  private state: { kind: 'loading' } | { kind: 'ready'; daily: DailyChallenge } | { kind: 'failed'; reason: string } = {
+  private state:
+    | { kind: 'loading' }
+    | { kind: 'ready'; daily: DailyChallenge }
+    | { kind: 'failed'; reason: string } = {
     kind: 'loading',
   };
 
@@ -63,9 +61,7 @@ export class DailyChallengeView implements vscode.TreeDataProvider<vscode.TreeIt
     const { date, problem } = this.state.daily;
     const item = new vscode.TreeItem(`${problem.number}. ${problem.title}`);
     item.description = `${problem.difficulty} · ${date}`;
-    item.iconPath = new vscode.ThemeIcon(
-      problem.status === 'ac' ? 'check' : (DIFFICULTY_ICON[problem.difficulty] ?? 'circle-outline'),
-    );
+    item.iconPath = problemIcon(problem);
     item.tooltip = problem.paidOnly ? 'Premium only' : problem.title;
     // Phase 3 replaces this with "open the problem in the editor".
     item.command = {

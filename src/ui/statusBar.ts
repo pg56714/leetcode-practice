@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { UserStatus } from '../leetcode/types';
+import type { UserStatus } from '../leetcode/types';
 
 /**
  * Status bar entry showing who is signed in.

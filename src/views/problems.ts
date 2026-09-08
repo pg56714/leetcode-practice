@@ -1,13 +1,8 @@
 import * as vscode from 'vscode';
-import { Catalogue } from '../leetcode/catalogue';
 import { problemUrl } from '../leetcode/api';
-import { ProblemSummary } from '../leetcode/types';
-
-const DIFFICULTY_ICON: Record<string, string> = {
-  Easy: 'circle-outline',
-  Medium: 'circle-large-outline',
-  Hard: 'flame',
-};
+import type { Catalogue } from '../leetcode/catalogue';
+import type { ProblemSummary } from '../leetcode/types';
+import { problemIcon } from '../ui/icons';
 
 /** How many rows are rendered at once when nothing is being searched. */
 const UNFILTERED_LIMIT = 500;
@@ -102,9 +97,7 @@ export class ProblemsView implements vscode.TreeDataProvider<vscode.TreeItem> {
     const rows = shown.map((problem) => toRow(problem));
 
     if (!filtering && matches.length > shown.length) {
-      const more = new vscode.TreeItem(
-        `… ${matches.length - shown.length} more — use Search`,
-      );
+      const more = new vscode.TreeItem(`… ${matches.length - shown.length} more — use Search`);
       more.iconPath = new vscode.ThemeIcon('search');
       more.command = { command: 'leetcodePractice.searchProblems', title: 'Search problems' };
       rows.push(more);
@@ -122,9 +115,7 @@ function toRow(problem: ProblemSummary): vscode.TreeItem {
   const item = new vscode.TreeItem(`${problem.number}. ${problem.title}`);
   const rate = problem.acRate === null ? '' : ` · ${problem.acRate.toFixed(0)}%`;
   item.description = `${problem.difficulty}${rate}`;
-  item.iconPath = new vscode.ThemeIcon(
-    problem.paidOnly ? 'lock' : problem.status === 'ac' ? 'check' : (DIFFICULTY_ICON[problem.difficulty] ?? 'circle-outline'),
-  );
+  item.iconPath = problemIcon(problem);
   item.tooltip = problem.paidOnly ? `${problem.title} (Premium only)` : problem.title;
   item.contextValue = 'leetcodeProblem';
   // Phase 3 replaces this with "open the problem in the editor".

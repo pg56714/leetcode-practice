@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { Api, PAGE_SIZE } from './api';
-import { ProblemSummary } from './types';
 import { log } from '../log';
+import { type Api, PAGE_SIZE } from './api';
+import type { ProblemSummary } from './types';
 
 /** Bump when the cached shape changes, so old files are discarded not misread. */
 const CACHE_VERSION = 1;
@@ -154,9 +154,7 @@ export class Catalogue {
       return this.problems;
     }
     if (/^\d+$/.test(trimmed)) {
-      return this.problems.filter(
-        (p) => p.number === trimmed || p.number.startsWith(trimmed),
-      );
+      return this.problems.filter((p) => p.number === trimmed || p.number.startsWith(trimmed));
     }
     return this.problems.filter(
       (p) => p.title.toLowerCase().includes(trimmed) || p.slug.includes(trimmed),

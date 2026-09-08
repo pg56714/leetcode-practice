@@ -2,11 +2,11 @@ import * as vscode from 'vscode';
 import { Api, ORIGIN } from './leetcode/api';
 import { Catalogue } from './leetcode/catalogue';
 import { Session } from './leetcode/session';
-import { UserStatus } from './leetcode/types';
+import type { UserStatus } from './leetcode/types';
+import { log } from './log';
+import { StatusBar } from './ui/statusBar';
 import { DailyChallengeView } from './views/dailyChallenge';
 import { ProblemsView } from './views/problems';
-import { StatusBar } from './ui/statusBar';
-import { log } from './log';
 
 /** Drives the "signed in" context key, which gates view/title buttons. */
 async function publishStatus(api: Api, statusBar: StatusBar): Promise<UserStatus | undefined> {

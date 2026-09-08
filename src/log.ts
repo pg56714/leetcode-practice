@@ -27,7 +27,8 @@ export const log = {
    * or some unknown thrown value — and is reduced to a single readable line.
    */
   error(message: string, detail?: unknown): void {
-    const suffix = detail === undefined ? '' : `: ${detail instanceof Error ? detail.message : String(detail)}`;
+    const suffix =
+      detail === undefined ? '' : `: ${detail instanceof Error ? detail.message : String(detail)}`;
     out().appendLine(`${stamp()}  ERROR ${message}${suffix}`);
   },
 

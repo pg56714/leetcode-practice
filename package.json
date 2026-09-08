@@ -126,9 +126,12 @@
     "watch": "bun run compile -- --watch",
     "package": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --minify",
     "vscode:prepublish": "bun run package",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "biome check src",
+    "format": "biome check --write src"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.12",
     "@types/node": "^20.12.7",
     "@types/vscode": "^1.90.0",
     "esbuild": "^0.20.2",

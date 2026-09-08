@@ -1,7 +1,7 @@
 import { log } from '../log';
 import { DAILY_CHALLENGE, PROBLEM_PAGE, USER_STATUS } from './queries';
-import { DailyChallenge, Difficulty, ProblemSummary, UserStatus } from './types';
-import { Session } from './session';
+import type { Session } from './session';
+import type { DailyChallenge, Difficulty, ProblemSummary, UserStatus } from './types';
 
 export const ORIGIN = 'https://leetcode.com';
 
@@ -52,7 +52,7 @@ export class Api {
 
     const credentials = await this.session.read();
     if (credentials) {
-      headers['Cookie'] = `LEETCODE_SESSION=${credentials.session}; csrftoken=${credentials.csrfToken}`;
+      headers.Cookie = `LEETCODE_SESSION=${credentials.session}; csrftoken=${credentials.csrfToken}`;
       headers['x-csrftoken'] = credentials.csrfToken;
     }
 

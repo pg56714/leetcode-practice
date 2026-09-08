@@ -1,5 +1,5 @@
-import * as vscode from 'vscode';
-import { Credentials } from './types';
+import type * as vscode from 'vscode';
+import type { Credentials } from './types';
 
 const SECRET_KEY = 'leetcodePractice.credentials';
 
