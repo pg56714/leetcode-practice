@@ -1,6 +1,13 @@
 import { log } from '../log';
 import type { Api } from './api';
-import { STUDY_PLAN_DETAIL, UPCOMING_CONTESTS } from './queries';
+import {
+  CONTEST_QUESTIONS,
+  FAVOURITE_LISTS,
+  FAVOURITE_QUESTIONS,
+  PAST_CONTESTS,
+  STUDY_PLAN_DETAIL,
+  UPCOMING_CONTESTS,
+} from './queries';
 import type { Difficulty, ProblemSummary } from './types';
 
 /**
@@ -42,6 +49,16 @@ export interface Contest {
   /** Unix seconds, as LeetCode sends it. */
   startTime: number;
   durationMinutes: number;
+  /** Past contests can be practised; upcoming ones have no problems yet. */
+  past: boolean;
+}
+
+/** A problem as a contest lists it. */
+export interface ContestQuestion {
+  title: string;
+  slug: string;
+  /** Points it was worth, which is the contest's own difficulty scale. */
+  credit: number;
 }
 
 /** Raw question node inside a study plan. */
@@ -74,17 +91,22 @@ function normaliseDifficulty(value: string): Difficulty {
 }
 
 /**
- * Brings a plan's status in line with the problem set's.
+ * Brings a status in line with the problem set's vocabulary.
  *
- * A plan reports "TO_DO" or "PAST_SOLVED" where the problem set reports null or
- * "ac". Anything else that is not TO_DO is treated as attempted, so an
- * unfamiliar value shows as started rather than untouched.
+ * Two vocabularies are in play for the same idea: the problem set answers null,
+ * "ac" or "notac", while study plans answer "TO_DO" or "PAST_SOLVED". Lists have
+ * not been seen carrying either, so both are handled and anything unrecognised
+ * counts as attempted — showing a problem as started when it might not be is
+ * the milder error.
  */
 function normaliseStatus(value: string | null): string | null {
-  if (value === null || value === 'TO_DO') {
+  if (value === null || value === 'TO_DO' || value === '') {
     return null;
   }
-  return value.includes('SOLVED') ? 'ac' : 'notac';
+  if (value === 'ac' || value.includes('SOLVED')) {
+    return 'ac';
+  }
+  return 'notac';
 }
 
 function toSummary(node: PlanQuestionNode): ProblemSummary {
@@ -158,5 +180,110 @@ export async function fetchUpcomingContests(api: Api): Promise<Contest[]> {
     title: contest.title,
     startTime: contest.startTime,
     durationMinutes: Math.round(contest.duration / 60),
+    past: false,
   }));
+}
+
+/**
+ * Fetches the most recent contests that have already run.
+ *
+ * These are the ones worth showing: their problems exist and can be practised,
+ * where an upcoming contest is only an announcement.
+ */
+export async function fetchPastContests(api: Api, count: number): Promise<Contest[]> {
+  const data = await api.graphql<{
+    pastContests: {
+      data: { title: string; titleSlug: string; startTime: number; duration: number }[];
+    } | null;
+  }>(PAST_CONTESTS, { pageNo: 1, numPerPage: count });
+
+  return (data.pastContests?.data ?? []).map((contest) => ({
+    slug: contest.titleSlug,
+    title: contest.title,
+    startTime: contest.startTime,
+    durationMinutes: Math.round(contest.duration / 60),
+    past: true,
+  }));
+}
+
+/** Fetches the problems that made up one contest. */
+export async function fetchContestQuestions(api: Api, slug: string): Promise<ContestQuestion[]> {
+  const data = await api.graphql<{
+    contest: { questions: { title: string; titleSlug: string; credit: number }[] | null } | null;
+  }>(CONTEST_QUESTIONS, { slug });
+
+  return (data.contest?.questions ?? []).map((question) => ({
+    title: question.title,
+    slug: question.titleSlug,
+    credit: question.credit,
+  }));
+}
+
+/** One of the reader's own problem lists. */
+export interface FavouriteList {
+  slug: string;
+  name: string;
+  /** How many problems LeetCode says it holds. */
+  count: number;
+  /** Whether they made the list or saved somebody else's. */
+  own: boolean;
+}
+
+/** Fetches the reader's created and collected lists. */
+export async function fetchFavouriteLists(api: Api): Promise<FavouriteList[]> {
+  const data = await api.graphql<{
+    myCreatedFavoriteList: {
+      favorites: { name: string; slug: string; questionNumber: number }[];
+    } | null;
+    myCollectedFavoriteList: {
+      favorites: { name: string; slug: string; questionNumber: number }[];
+    } | null;
+  }>(FAVOURITE_LISTS);
+
+  const created = data.myCreatedFavoriteList?.favorites ?? [];
+  const collected = data.myCollectedFavoriteList?.favorites ?? [];
+
+  return [
+    ...created.map((list) => ({
+      slug: list.slug,
+      name: list.name,
+      count: list.questionNumber,
+      own: true,
+    })),
+    ...collected.map((list) => ({
+      slug: list.slug,
+      name: list.name,
+      count: list.questionNumber,
+      own: false,
+    })),
+  ];
+}
+
+/** How many problems one page of a list holds. */
+const LIST_PAGE_SIZE = 100;
+
+/**
+ * Fetches every problem in one list.
+ *
+ * Paged with `hasMore` rather than a count, and capped: a list nobody expected
+ * to be enormous should not turn into an unbounded loop.
+ */
+export async function fetchFavouriteQuestions(api: Api, slug: string): Promise<ProblemSummary[]> {
+  const collected: ProblemSummary[] = [];
+
+  for (let skip = 0; skip < 2000; skip += LIST_PAGE_SIZE) {
+    const data = await api.graphql<{
+      favoriteQuestionList: { hasMore: boolean; questions: PlanQuestionNode[] } | null;
+    }>(FAVOURITE_QUESTIONS, { favoriteSlug: slug, limit: LIST_PAGE_SIZE, skip });
+
+    const page = data.favoriteQuestionList;
+    if (page === null) {
+      break;
+    }
+    collected.push(...page.questions.map(toSummary));
+    if (!page.hasMore) {
+      break;
+    }
+  }
+  return collected;
 }

@@ -48,11 +48,12 @@ session 幾週後會過期，屆時 Test / Submit 會開始出現「session may 
 ### 側邊欄
 
 - **Daily Challenge** — 今天的每日挑戰題，一列
-- **Study Plans** — LeetCode 官方的學習計畫（Top Interview 150、LeetCode 75 等），
-  依「計畫 → 章節 → 題目」展開，並顯示各計畫解出幾題。
-  LeetCode 沒有可用的「列出所有計畫」查詢，所以要顯示哪些寫在 `leetcodePractice.studyPlans` 設定裡。
-- **Contests** — 尚未開始的比賽與倒數。點擊開瀏覽器：比賽開始前題目在 API 上並不存在，
-  而且參賽本身要看計時與排行榜。
+- **Study Lists** — 先是你自己的收藏清單，再是 LeetCode 官方計畫（Top Interview 150、LeetCode 75 等），
+  依「計畫 → 章節 → 題目」展開並顯示各自解出幾題。你的清單有列表查詢可用，官方計畫沒有，
+  所以要顯示哪些寫在設定裡。
+- **Contests** — 即將開始的比賽（含倒數），以及最近十幾場已結束的。
+  **已結束的可以展開成題目**，每題都能像平常一樣打開來練 —— 那才是可練的部分；
+  尚未開始的沒有題目，點擊會開網站（計時與排行榜在那邊）。
 - **Problems** — 全題庫 4,000 多題，可搜尋。清單快取在磁碟，超過 7 天才在背景重抓；
   未搜尋時只列前 500 題（四千列沒人會滑，搜尋才是入口）。
   搜尋純數字時比對題號前綴，所以打 `17` 會看到 17、170、171… 而不是被 1700 系列淹沒
@@ -120,9 +121,13 @@ session 幾週後會過期，屆時 Test / Submit 會開始出現「session may 
 | `leetcodePractice.defaultLanguage` | 開題時用哪個語言的模板（`python3`、`cpp`、`rust`…） |
 | `leetcodePractice.studyPlans` | 側邊欄要顯示哪些學習計畫，用網址裡的 slug |
 
-## 還沒做
+### 看別人的解法
 
-- [ ] 討論區
+編輯器標題列的討論按鈕會列出這題最多讚的社群解答（含讚數、瀏覽、留言數），
+選一篇就以 Markdown 預覽開在程式碼旁邊。那些文章本來就是 Markdown，
+所以直接用 VS Code 內建預覽 —— 不必多帶 Markdown 渲染器或 HTML 清洗套件，
+程式碼區塊還自帶語法highlight、可以直接複製。文章快取在 global storage 而不是題目資料夾裡，
+因為那是別人的作品，而歸檔流程會把解答旁邊的東西一起收走。
 
 ## 開發
 

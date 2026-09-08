@@ -48,8 +48,8 @@
           "name": "Problems"
         },
         {
-          "id": "leetcodePractice.studyPlans",
-          "name": "Study Plans"
+          "id": "leetcodePractice.studyLists",
+          "name": "Study Lists"
         },
         {
           "id": "leetcodePractice.contests",
@@ -122,14 +122,19 @@
         "icon": "$(code)"
       },
       {
-        "command": "leetcodePractice.refreshStudyPlans",
-        "title": "Refresh Study Plans",
+        "command": "leetcodePractice.refreshStudyLists",
+        "title": "Refresh Study Lists",
         "icon": "$(refresh)"
       },
       {
         "command": "leetcodePractice.refreshContests",
         "title": "Refresh Contests",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "leetcodePractice.showSolutions",
+        "title": "LeetCode Practice: Show Community Solutions",
+        "icon": "$(comment-discussion)"
       }
     ],
     "menus": {
@@ -160,8 +165,8 @@
           "group": "navigation@3"
         },
         {
-          "command": "leetcodePractice.refreshStudyPlans",
-          "when": "view == leetcodePractice.studyPlans",
+          "command": "leetcodePractice.refreshStudyLists",
+          "when": "view == leetcodePractice.studyLists",
           "group": "navigation@1"
         },
         {
@@ -185,6 +190,11 @@
           "command": "leetcodePractice.submitSolution",
           "when": "leetcodePractice.isSolution",
           "group": "navigation@2"
+        },
+        {
+          "command": "leetcodePractice.showSolutions",
+          "when": "leetcodePractice.isSolution",
+          "group": "navigation@4"
         }
       ]
     },

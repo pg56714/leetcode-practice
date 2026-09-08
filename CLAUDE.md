@@ -95,6 +95,24 @@ Found by probing. None of it appears in any official documentation:
   These nine resolve through `studyPlanV2Detail`: top-interview-150,
   leetcode-75, top-100-liked, top-sql-50, programming-skills,
   dynamic-programming, graph-theory, binary-search, 30-days-of-javascript
+- The reader's own lists **do** have a listing query:
+  `myCreatedFavoriteList` and `myCollectedFavoriteList`, with opaque hash slugs.
+  Their problems come from `favoriteQuestionList(favoriteSlug:)`, which pages on
+  `hasMore`. A study plan slug does not work there — a plan is not a list
+- `pastContests(pageNo:, numPerPage:)` lists finished contests (714 of them) and
+  `contest(titleSlug:)` gives their problems with `credit` but no frontend number
+  or difficulty. Past contests are the practisable ones; upcoming have no
+  problems yet
+- Community solutions: `questionSolutions(filters: { questionSlug, first, skip,
+  orderBy })` where orderBy is a **lower case** enum literal (`most_votes`), and
+  `voteCount` sits on `post` rather than the topic. One article comes from
+  `topic(id: Int!)`
+- **Post bodies are escaped Markdown**: newlines arrive as the two characters
+  backslash-n and backslashes are doubled, so a 7,888 character post has 205
+  literal escapes and no real line breaks. `JSON.parse` cannot undo it — the
+  bodies contain sequences it rejects, such as a backslash before a full stop
+- `question.topicId` does not exist; `boundTopicId` and `articleTopicId` do, and
+  both are null for two-sum, so problem discussion cannot be reached that way
 - `favoritesLists` exists but its official lists are internal oddities
   (Ascension I, Challenge I), not the plans anyone recognises
 - An `interpret_id` looks like `runcode_1788854646.6059482_R6qaNhtKMm`, not a

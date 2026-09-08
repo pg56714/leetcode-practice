@@ -125,3 +125,144 @@ export const UPCOMING_CONTESTS = `
     }
   }
 `;
+
+/**
+ * The reader's own problem lists.
+ *
+ * This is the listing query that study plans lack: created lists are the ones
+ * they made, collected are the ones they saved. Slugs are opaque hashes.
+ */
+export const FAVOURITE_LISTS = `
+  query myFavouriteLists {
+    myCreatedFavoriteList {
+      favorites {
+        name
+        slug
+        questionNumber
+      }
+    }
+    myCollectedFavoriteList {
+      favorites {
+        name
+        slug
+        questionNumber
+      }
+    }
+  }
+`;
+
+/**
+ * The problems in one list.
+ *
+ * Paged like the problem set, and `hasMore` rather than a total to compare
+ * against. Study plan slugs do not work here — a plan is not a list.
+ */
+export const FAVOURITE_QUESTIONS = `
+  query favouriteQuestions($favoriteSlug: String!, $limit: Int, $skip: Int) {
+    favoriteQuestionList(
+      favoriteSlug: $favoriteSlug
+      filter: { positionRoleTagSlug: "", skip: $skip, limit: $limit }
+    ) {
+      totalLength
+      hasMore
+      questions {
+        questionFrontendId
+        title
+        titleSlug
+        difficulty
+        status
+        paidOnly
+      }
+    }
+  }
+`;
+
+/** Contests that have already run. 700-plus of them, so it pages. */
+export const PAST_CONTESTS = `
+  query pastContests($pageNo: Int, $numPerPage: Int) {
+    pastContests(pageNo: $pageNo, numPerPage: $numPerPage) {
+      totalNum
+      data {
+        title
+        titleSlug
+        startTime
+        duration
+      }
+    }
+  }
+`;
+
+/**
+ * One contest and its problems.
+ *
+ * Contest questions carry `credit` (the points they were worth) and the
+ * internal `questionId`, but no frontend number and no difficulty — those come
+ * from the problem itself when it is opened.
+ */
+export const CONTEST_QUESTIONS = `
+  query contest($slug: String!) {
+    contest(titleSlug: $slug) {
+      title
+      startTime
+      duration
+      questions {
+        title
+        titleSlug
+        credit
+      }
+    }
+  }
+`;
+
+/**
+ * Community solutions for a problem, most upvoted first.
+ *
+ * `orderBy` is an enum whose values are lower case literals — `most_votes`,
+ * not MOST_VOTES — which is unusual enough to be worth stating. `voteCount`
+ * lives on the post rather than the topic.
+ */
+export const SOLUTION_LIST = `
+  query questionSolutions($slug: String!, $first: Int!) {
+    questionSolutions(filters: { questionSlug: $slug, first: $first, skip: 0, orderBy: most_votes }) {
+      totalNum
+      solutions {
+        id
+        title
+        commentCount
+        viewCount
+        post {
+          voteCount
+          creationDate
+          author {
+            username
+          }
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * One solution with its body.
+ *
+ * The body is Markdown, but escaped: newlines arrive as backslash-n. See
+ * unescapePost.
+ */
+export const SOLUTION_ARTICLE = `
+  query topic($id: Int!) {
+    topic(id: $id) {
+      id
+      title
+      commentCount
+      viewCount
+      post {
+        content
+        voteCount
+        creationDate
+        author {
+          username
+        }
+      }
+    }
+  }
+`;

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { changeLanguage } from './commands/changeLanguage';
 import { openProblem } from './commands/openProblem';
 import { runSolution } from './commands/runSolution';
+import { showSolutions } from './commands/showSolutions';
 import {
   type AuthContext,
   publishStatus,
@@ -18,7 +19,7 @@ import { StatusBar } from './ui/statusBar';
 import { ContestsView } from './views/contests';
 import { DailyChallengeView } from './views/dailyChallenge';
 import { ProblemsView } from './views/problems';
-import { StudyPlansView } from './views/studyPlans';
+import { StudyListsView } from './views/studyLists';
 import { ProblemPanel } from './webview/problemPanel';
 import { ResultView } from './webview/resultView';
 import { readMetadata } from './workspace/problemFiles';
@@ -32,7 +33,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   const daily = new DailyChallengeView(api);
   const problems = new ProblemsView(catalogue);
-  const studyPlans = new StudyPlansView(api);
+  const studyLists = new StudyListsView(api);
   const contests = new ContestsView(api);
   const problemPanel = new ProblemPanel();
   const results = new ResultView();
@@ -51,7 +52,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     onAccountChanged: () => {
       void catalogue.refresh({ silent: true });
       void daily.refresh();
-      studyPlans.refresh();
+      studyLists.refresh();
       contests.refresh();
     },
   };
@@ -72,7 +73,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     statusBar,
     daily,
     problems,
-    studyPlans,
+    studyLists,
     contests,
     catalogue,
     problemsView,
@@ -81,7 +82,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.window.registerUriHandler(webAuth),
     vscode.window.registerWebviewViewProvider(ResultView.viewId, results),
     vscode.window.registerTreeDataProvider('leetcodePractice.daily', daily),
-    vscode.window.registerTreeDataProvider('leetcodePractice.studyPlans', studyPlans),
+    vscode.window.registerTreeDataProvider('leetcodePractice.studyLists', studyLists),
     vscode.window.registerTreeDataProvider('leetcodePractice.contests', contests),
     vscode.window.onDidChangeActiveTextEditor((editor) => void trackSolutionContext(editor)),
     vscode.commands.registerCommand('leetcodePractice.signIn', () => webAuth.start()),
@@ -91,8 +92,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('leetcodePractice.signOut', () => signOut(auth)),
     vscode.commands.registerCommand('leetcodePractice.refreshDaily', () => daily.refresh()),
     vscode.commands.registerCommand('leetcodePractice.refreshProblems', () => catalogue.refresh()),
-    vscode.commands.registerCommand('leetcodePractice.refreshStudyPlans', () =>
-      studyPlans.refresh(),
+    vscode.commands.registerCommand('leetcodePractice.refreshStudyLists', () =>
+      studyLists.refresh(),
     ),
     vscode.commands.registerCommand('leetcodePractice.refreshContests', () => contests.refresh()),
     vscode.commands.registerCommand('leetcodePractice.searchProblems', () =>
@@ -110,6 +111,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }),
     vscode.commands.registerCommand('leetcodePractice.changeLanguage', () =>
       changeLanguage(context, api),
+    ),
+    vscode.commands.registerCommand('leetcodePractice.showSolutions', () =>
+      showSolutions(context, api),
     ),
     vscode.commands.registerCommand('leetcodePractice.testSolution', () =>
       runSolution(judge, results, 'test'),

@@ -58,14 +58,14 @@ with "the session may have expired" and you sign in again.
 ### The sidebar
 
 - **Daily Challenge** — today's problem, one row
-- **Study Plans** — LeetCode's own plans (Top Interview 150, LeetCode 75, and
-  the rest), as plan then section then problem, with how many of each you have
-  solved. LeetCode has no query that lists the available plans, so the ones to
-  show are named in `leetcodePractice.studyPlans`.
-- **Contests** — the contests that have not started yet, with how long until
-  they do. Rows open the contest page in a browser: a contest's problems do not
-  exist in the API until it starts, and taking part means the timer and the
-  scoreboard.
+- **Study Lists** — your own lists, then LeetCode's official plans (Top
+  Interview 150, LeetCode 75 and the rest) as plan, section, problem, with how
+  many of each you have solved. Your lists have a listing query; the plans do
+  not, so which ones to show is a setting.
+- **Contests** — upcoming ones with a countdown, then the last dozen that ran.
+  A finished contest expands into its problems, each opening like any other,
+  which is the practisable part; an upcoming one has no problems yet, so its row
+  opens the website where the timer and scoreboard are.
 - **Problems** — the whole set, over 4,000 problems, searchable. The list is
   cached on disk and only refetched in the background once it is a week old.
   Unfiltered it renders the first 500 rows, because nobody scrolls four thousand
@@ -150,9 +150,15 @@ module, so a VSIX is platform specific.
 | `leetcodePractice.defaultLanguage` | Which language template a problem opens with (`python3`, `cpp`, `rust`, …). |
 | `leetcodePractice.studyPlans` | Which study plans the sidebar shows, by the slug in their URL. |
 
-## Not yet built
+### Reading other people's solutions
 
-- [ ] Discussions
+The discussion button in the editor title bar lists the most upvoted community
+solutions for the problem, with votes, views and comments, and opens the one you
+pick as a Markdown preview beside your code. They are Markdown already, so
+VS Code's own preview renders them — no Markdown renderer or HTML sanitiser to
+ship, and the code blocks come out highlighted and copyable. Articles are cached
+under global storage rather than in the problem folder, since they are somebody
+else's work and the archive workflow sweeps up whatever sits next to a solution.
 
 ## Developing
 
