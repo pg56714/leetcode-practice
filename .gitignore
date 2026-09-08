@@ -3,3 +3,6 @@ dist/
 out/
 *.vsix
 .vscode-test/
+
+# Judge payload dumps from scripts/probe-judge-shapes.mjs
+judge-shapes*.json
