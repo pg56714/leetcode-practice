@@ -120,7 +120,13 @@ Found by probing. None of it appears in any official documentation:
 
 ## Verifying
 
-- Run `bun run typecheck` after changes
-- When touching anything API-shaped, write a throwaway probe script against the
-  real API to confirm fields and behaviour rather than trusting the types. Every
-  API fact above was found that way
+- `bun run typecheck`, `bun run lint` and `bun test` after changes
+- Tests cover the pure logic — payload reading, escaping, language rules,
+  normalisation — using payloads recorded from real runs as fixtures. They need
+  no credentials and no network, so they run in CI
+- Anything API-shaped is confirmed with a throwaway probe script under
+  `scripts/` against the real API rather than by trusting the types. Those need
+  a session in `.env` and stay out of the test suite. Every API fact above was
+  found that way
+- `.vscodeignore` does not inherit `.gitignore`. Anything secret has to be named
+  in both, or it ships inside the VSIX — check with `vsce ls`

@@ -186,6 +186,17 @@ bun run typecheck
 bun run lint
 ```
 
+```bash
+bun test
+```
+
+The tests cover the parts where being wrong is silent: reading judge payloads,
+undoing the escaping on community posts, deciding which language a file
+submits as, and normalising the vocabularies LeetCode uses in different places.
+They run against payloads recorded from real runs, so they need no credentials
+and no network. The scripts under `scripts/` do talk to the API and are run by
+hand.
+
 Conventions and the LeetCode API behaviour found by probing are in
 [CLAUDE.md](CLAUDE.md).
 

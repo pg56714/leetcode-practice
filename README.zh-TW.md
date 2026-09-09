@@ -154,6 +154,15 @@ bun run typecheck
 bun run lint
 ```
 
+```bash
+bun test
+```
+
+測試涵蓋的是「錯了不會有人告訴你」的那些地方：判題 payload 的解讀、社群文章的轉義還原、
+提交時該送哪個語言、以及 LeetCode 在不同地方用不同詞彙的正規化。
+資料用真實跑出來的 payload 當 fixture，所以不需要憑證也不需要網路。
+`scripts/` 底下那些會打真實 API，維持手動執行。
+
 慣例與已知的 LeetCode API 行為記在 [CLAUDE.md](CLAUDE.md)。
 
 ## 授權

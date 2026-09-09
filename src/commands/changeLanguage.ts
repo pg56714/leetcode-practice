@@ -60,7 +60,13 @@ export async function changeLanguage(context: vscode.ExtensionContext, api: Api)
       }`,
     );
     if (!opened.created) {
-      void vscode.window.showInformationMessage(`Reopened your existing ${picked.label} solution.`);
+      // SQL dialects all use main.sql, so switching between them reuses the file
+      // that is already there rather than reopening one written in that dialect.
+      const message =
+        opened.langSlug === metadata.lang
+          ? `Reopened your existing ${picked.label} solution.`
+          : `Switched to ${picked.label}, in the same main.${extensionFor(opened.langSlug)}.`;
+      void vscode.window.showInformationMessage(message);
     }
   } catch (err) {
     log.error(`Could not switch language for ${metadata.titleSlug}`, err);

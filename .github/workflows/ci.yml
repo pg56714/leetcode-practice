@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - name: Types
+        run: bun run typecheck
+
+      - name: Lint and format
+        run: bun run lint
+
+      - name: Tests
+        run: bun test
+
+      # Builds the bundle and copies the native module, which is where a
+      # packaging mistake shows up rather than in the type checker.
+      - name: Build
+        run: bun run compile

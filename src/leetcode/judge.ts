@@ -108,8 +108,10 @@ export function readResult(payload: unknown): JudgeResult {
     ran && (data.correct_answer === undefined ? statusMessage === 'Accepted' : data.correct_answer);
 
   const result: JudgeResult = {
-    // Echoing "Accepted" for a test run that answered wrongly would be a lie.
-    verdict: !ran || accepted ? statusMessage : 'Wrong Answer',
+    // Echoing "Accepted" for a test run that answered wrongly would be a lie,
+    // but so would calling a payload that said nothing a wrong answer: only
+    // correct_answer being present and false is grounds for overriding.
+    verdict: ran && data.correct_answer === false ? 'Wrong Answer' : statusMessage,
     accepted,
     ran,
   };

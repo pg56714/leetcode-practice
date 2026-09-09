@@ -18,19 +18,17 @@ import type { Difficulty, ProblemSummary } from './types';
  * and introspection is disabled, so there is nothing to enumerate with. Each of
  * these was checked individually against `studyPlanV2Detail`. The setting exists
  * because this list cannot discover new plans on its own.
- *
- * Algorithm plans only. LeetCode also publishes SQL and JavaScript courses,
- * which are worth doing and are not what this workspace is for — add their
- * slugs to the setting to bring them back.
  */
 export const DEFAULT_STUDY_PLANS = [
   'top-interview-150',
   'leetcode-75',
   'top-100-liked',
+  'top-sql-50',
   'programming-skills',
   'dynamic-programming',
   'graph-theory',
   'binary-search',
+  '30-days-of-javascript',
 ];
 
 export interface StudyPlanGroup {

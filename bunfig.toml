@@ -1,0 +1,4 @@
+[test]
+# The vscode module only exists inside the editor, so the stub has to be
+# registered before any test imports something that reaches for it.
+preload = ["./src/test/preload.ts"]
