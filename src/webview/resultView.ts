@@ -51,6 +51,28 @@ function cases(result: JudgeResult, input: string[]): string {
 }
 
 /**
+ * The case a submission failed on, with whatever is known about it.
+ *
+ * Code that never ran produces no output, so LeetCode sends an empty string
+ * where the answer would be. Rendering that as an empty box invites the reader
+ * to wonder what went missing, when the answer is that there was nothing to
+ * show — so say so instead.
+ */
+function failingCase(result: JudgeResult): string {
+  const parts = [pre(result.failedInput ?? '')];
+
+  if (result.failedExpected !== undefined) {
+    parts.push(`<p class="label">Expected</p>${pre(result.failedExpected)}`);
+  }
+  if (result.failedActual !== undefined) {
+    parts.push(`<p class="label">Got</p>${pre(result.failedActual)}`);
+  } else if (!result.ran) {
+    parts.push('<p class="label">Got nothing: the code never ran.</p>');
+  }
+  return parts.join('');
+}
+
+/**
  * Judge results, shown in the panel alongside Terminal and Output.
  *
  * They live there rather than in an editor tab because a result is something to
@@ -108,14 +130,7 @@ export class ResultView implements vscode.WebviewViewProvider {
       result.compileError !== undefined ? block('Compile error', pre(result.compileError)) : '',
       result.runtimeError !== undefined ? block('Runtime error', pre(result.runtimeError)) : '',
       cases(result, input),
-      result.failedInput !== undefined
-        ? block(
-            'Failing case',
-            `${pre(result.failedInput)}
-             <p class="label">Expected</p>${pre(result.failedExpected ?? '')}
-             <p class="label">Got</p>${pre(result.failedActual ?? '')}`,
-          )
-        : '',
+      result.failedInput !== undefined ? block('Failing case', failingCase(result)) : '',
       result.stdout !== undefined && result.stdout.length > 0
         ? block('Printed output', pre(result.stdout.join('\n')))
         : '',
