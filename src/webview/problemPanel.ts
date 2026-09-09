@@ -48,7 +48,9 @@ const ALLOWED: Record<string, string[]> = {
  * The problem statement panel.
  *
  * One panel is reused for every problem: opening a second problem replaces the
- * contents rather than piling up tabs. Scripts stay disabled and the content
+ * contents rather than piling up tabs. It sits in the first column with the code
+ * to its right, which is how leetcode.com itself reads and the order the work
+ * happens in. Scripts stay disabled and the content
  * security policy allows only inline styles and remote images, because nothing
  * here needs to execute — the statement is static HTML.
  */
@@ -60,7 +62,7 @@ export class ProblemPanel {
       this.panel = vscode.window.createWebviewPanel(
         'leetcodePractice.problem',
         detail.title,
-        { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
+        { viewColumn: vscode.ViewColumn.One, preserveFocus: true },
         { enableScripts: false, retainContextWhenHidden: true },
       );
       this.panel.onDidDispose(() => {
@@ -70,7 +72,7 @@ export class ProblemPanel {
 
     this.panel.title = `${detail.number}. ${detail.title}`;
     this.panel.webview.html = render(detail);
-    this.panel.reveal(vscode.ViewColumn.Beside, true);
+    this.panel.reveal(vscode.ViewColumn.One, true);
   }
 
   dispose(): void {

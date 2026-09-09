@@ -214,6 +214,28 @@
           "when": "leetcodePractice.isSolution",
           "group": "navigation@4"
         }
+      ],
+      "commandPalette": [
+        {
+          "command": "leetcodePractice.testSolution",
+          "when": "leetcodePractice.isSolution"
+        },
+        {
+          "command": "leetcodePractice.submitSolution",
+          "when": "leetcodePractice.isSolution"
+        },
+        {
+          "command": "leetcodePractice.changeLanguage",
+          "when": "leetcodePractice.isSolution"
+        },
+        {
+          "command": "leetcodePractice.showStatement",
+          "when": "leetcodePractice.isSolution"
+        },
+        {
+          "command": "leetcodePractice.showSolutions",
+          "when": "leetcodePractice.isSolution"
+        }
       ]
     },
     "configuration": {
@@ -238,12 +260,10 @@
             "top-interview-150",
             "leetcode-75",
             "top-100-liked",
-            "top-sql-50",
             "programming-skills",
             "dynamic-programming",
             "graph-theory",
-            "binary-search",
-            "30-days-of-javascript"
+            "binary-search"
           ],
           "markdownDescription": "Study plans to show, by the slug in their URL (`leetcode.com/studyplan/<slug>`). LeetCode has no query that lists the available plans, so they have to be named here."
         }

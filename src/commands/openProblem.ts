@@ -27,8 +27,9 @@ function preferredLanguage(): string {
 /**
  * Opens a problem: fetch it, lay out its folder, show the statement and code.
  *
- * The statement opens beside the code without taking focus, so the cursor lands
- * in the editor ready to type.
+ * The statement takes the first column and the code the second, matching how
+ * leetcode.com reads. The statement never takes focus, so the cursor lands in
+ * the editor ready to type.
  */
 export async function openProblem(
   context: vscode.ExtensionContext,
@@ -47,7 +48,7 @@ export async function openProblem(
 
     const document = await vscode.workspace.openTextDocument(opened.solution);
     await vscode.window.showTextDocument(document, {
-      viewColumn: vscode.ViewColumn.One,
+      viewColumn: vscode.ViewColumn.Two,
       preview: false,
     });
 

@@ -1,10 +1,23 @@
+# Source and tooling: the bundle in dist/ is what ships
 src/**
 out/**
 node_modules/**
+scripts/**
 .vscode/**
 .vscode-test/**
 .github/**
 tsconfig.json
+biome.json
 bun.lock
 .gitignore
+.gitattributes
 *.vsix
+
+# Credentials and probe output. .vscodeignore does not inherit .gitignore, so
+# anything secret has to be named here as well or it ships inside the VSIX.
+.env
+.env.*
+judge-shapes*.json
+
+# Notes for tools, not for anyone installing this
+CLAUDE.md
