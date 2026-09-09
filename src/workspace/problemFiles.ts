@@ -5,7 +5,7 @@ import { log } from '../log';
 import { completeTemplate } from './templates';
 
 /** What a problem folder holds, and what phase 4 needs to submit from it. */
-export interface ProblemMetadata {
+interface ProblemMetadata {
   /** Internal id. The interpret and submit endpoints want this one. */
   questionId: string;
   /** The website's number, which also names the folder. */
@@ -32,7 +32,7 @@ const TESTCASES_NAME = 'testcases.txt';
  * open. Solutions the user wants to keep should not land in global storage, so
  * that case warns.
  */
-export function storageRoot(context: vscode.ExtensionContext): vscode.Uri {
+function storageRoot(context: vscode.ExtensionContext): vscode.Uri {
   const configured = vscode.workspace
     .getConfiguration('leetcodePractice')
     .get<string>('storagePath');
@@ -56,15 +56,12 @@ export function storageRoot(context: vscode.ExtensionContext): vscode.Uri {
  * Leading with the number means the folder sorts and reads the way the website
  * does, and downstream tooling never has to look the number up again.
  */
-export function folderName(detail: ProblemDetail): string {
+function folderName(detail: ProblemDetail): string {
   return `${detail.number}-${detail.slug}`;
 }
 
 /** Picks the snippet for a language, falling back to whatever LeetCode offers. */
-export function pickSnippet(
-  detail: ProblemDetail,
-  preferred: string,
-): { langSlug: string; code: string } {
+function pickSnippet(detail: ProblemDetail, preferred: string): { langSlug: string; code: string } {
   const match = detail.snippets.find((snippet) => snippet.langSlug === preferred);
   if (match) {
     return { langSlug: match.langSlug, code: match.code };
@@ -92,7 +89,7 @@ async function writeText(uri: vscode.Uri, text: string): Promise<void> {
   await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(text));
 }
 
-export interface OpenedProblem {
+interface OpenedProblem {
   folder: vscode.Uri;
   solution: vscode.Uri;
   langSlug: string;

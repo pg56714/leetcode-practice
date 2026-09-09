@@ -9,8 +9,8 @@
  * Usage: node scripts/make-icon.mjs [resources/icon.png]
  */
 
-import { deflateSync } from 'node:zlib';
 import { writeFileSync } from 'node:fs';
+import { deflateSync } from 'node:zlib';
 
 const SIZE = 128;
 /** Samples per axis. Edges are curved, so they need more than one. */

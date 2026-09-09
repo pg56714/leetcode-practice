@@ -13,6 +13,7 @@ bun.lock
 .gitignore
 .gitattributes
 *.vsix
+dist/**/*.map
 
 # Credentials and probe output. .vscodeignore does not inherit .gitignore, so
 # anything secret has to be named here as well or it ships inside the VSIX.

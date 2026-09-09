@@ -71,18 +71,17 @@ function resolveTransport(): Transport {
   return transport;
 }
 
-/** Raised when Cloudflare, rather than LeetCode, refused the request. */
-export class CloudflareChallenge extends Error {
-  constructor() {
-    super(
-      'Cloudflare is challenging LeetCode requests from this machine. ' +
-        'Opening a problem in the browser once often clears it.',
-    );
-  }
-}
+/**
+ * Raised when a judge request does not come back with a result.
+ *
+ * One type rather than a hierarchy: nothing catches these by kind, only shows
+ * the message, so what matters is that each message says what to do about it.
+ */
+class JudgeRequestError extends Error {}
 
-/** Raised when LeetCode itself refused the request. */
-export class JudgeRequestError extends Error {}
+const CLOUDFLARE_MESSAGE =
+  'Cloudflare is challenging LeetCode requests from this machine. ' +
+  'Opening a problem in the browser once often clears it.';
 
 /**
  * Detects a Cloudflare challenge, which arrives as a plain 403.
@@ -143,7 +142,7 @@ export class JudgeApi {
       const body = (await response.text()).slice(0, 400);
       log.error(`${request.method} ${url} failed with HTTP ${response.status}`, body);
       if (challenged(response)) {
-        throw new CloudflareChallenge();
+        throw new JudgeRequestError(CLOUDFLARE_MESSAGE);
       }
       // Measured: two judge runs in quick succession is enough to get a 429,
       // and the useful part of that is how long to wait, not the status code.

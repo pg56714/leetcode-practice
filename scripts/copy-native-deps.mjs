@@ -15,8 +15,8 @@
  */
 
 import { existsSync } from 'node:fs';
-import { cp, mkdir, readdir, rm } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { copyFile, mkdir, readdir, stat } from 'node:fs/promises';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -25,8 +25,32 @@ const TARGET = join(ROOT, 'dist', 'node_modules');
 
 const NATIVE = [{ name: 'impit', binaryPrefix: 'impit-' }];
 
+/** Every file under a directory, as paths relative to it. */
+async function filesUnder(dir) {
+  const found = [];
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      const children = await filesUnder(join(dir, entry.name));
+      found.push(...children.map((child) => join(entry.name, child)));
+    } else {
+      found.push(entry.name);
+    }
+  }
+  return found;
+}
+
 /**
- * Copies one package into dist/node_modules.
+ * Copies one package into dist/node_modules, file by file.
+ *
+ * Deliberately never deletes the destination first. A running Extension
+ * Development Host holds the .node binary mapped into memory, and on Windows a
+ * recursive delete removes everything it can before failing on that one file —
+ * leaving a package with its binary but no package.json, which cannot be
+ * required at all. That shipped in a VSIX once.
+ *
+ * So an identical file is left alone, a differing one is overwritten, and one
+ * that cannot be replaced because it is in use is reported rather than taken
+ * for success.
  *
  * @param {string} name Package directory name.
  * @returns {Promise<boolean>} True when the package existed and was copied.
@@ -37,24 +61,60 @@ async function copyPackage(name) {
     return false;
   }
   const to = join(TARGET, name);
-  try {
-    await rm(to, { recursive: true, force: true });
-    await cp(from, to, { recursive: true });
-    console.log(`copied ${name}`);
-  } catch (err) {
-    // A running Extension Development Host has the .node binary mapped into
-    // memory, and Windows will not let a mapped file be replaced. The copy
-    // already there is the one that host is using, so keeping it is correct —
-    // only a version change makes it stale, hence the warning.
-    const code = /** @type {{ code?: string }} */ (err).code;
-    if ((code === 'EPERM' || code === 'EBUSY') && existsSync(to)) {
-      console.warn(`kept existing ${name}: in use, probably by a running Extension Development Host`);
-      console.warn('  close it and rebuild if the dependency version changed');
-    } else {
-      throw err;
+
+  let copied = 0;
+  let unchanged = 0;
+  let locked = 0;
+
+  for (const file of await filesUnder(from)) {
+    const source = join(from, file);
+    const destination = join(to, file);
+    await mkdir(dirname(destination), { recursive: true });
+
+    if (existsSync(destination)) {
+      const [current, existing] = await Promise.all([stat(source), stat(destination)]);
+      if (current.size === existing.size) {
+        unchanged++;
+        continue;
+      }
+    }
+
+    try {
+      await copyFile(source, destination);
+      copied++;
+    } catch (err) {
+      const code = /** @type {{ code?: string }} */ (err).code;
+      if ((code === 'EPERM' || code === 'EBUSY') && existsSync(destination)) {
+        console.warn(`  ${file} is in use and differs; close the Extension Development Host`);
+        locked++;
+      } else {
+        throw err;
+      }
     }
   }
+
+  const lockedNote = locked > 0 ? `, ${locked} locked` : '';
+  console.log(`${name}: ${copied} copied, ${unchanged} already current${lockedNote}`);
   return true;
+}
+
+/**
+ * Refuses to finish on a package Node could not load.
+ *
+ * The failure this guards against is silent: everything packages and installs,
+ * and the extension then degrades to a transport Cloudflare blocks. Cheaper to
+ * catch here than in a bug report.
+ *
+ * @param {string} name Package directory name.
+ */
+async function assertRequirable(name) {
+  const manifest = join(TARGET, name, 'package.json');
+  if (!existsSync(manifest)) {
+    throw new Error(
+      `${relative(ROOT, manifest)} is missing, so require('${name}') would fail. ` +
+        'Delete dist/node_modules and build again.',
+    );
+  }
 }
 
 const installed = await readdir(SOURCE);
@@ -64,6 +124,7 @@ for (const { name, binaryPrefix } of NATIVE) {
   if (!(await copyPackage(name))) {
     throw new Error(`${name} is missing from node_modules — install first`);
   }
+  await assertRequirable(name);
 
   // The platform packages are optional dependencies, so only the ones matching
   // this host are present. Shipping none would leave impit unable to load its
@@ -74,5 +135,6 @@ for (const { name, binaryPrefix } of NATIVE) {
   }
   for (const binary of binaries) {
     await copyPackage(binary);
+    await assertRequirable(binary);
   }
 }

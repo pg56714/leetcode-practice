@@ -309,5 +309,17 @@
     "impit": "^0.14.5",
     "xss": "^1.0.15"
   },
-  "icon": "resources/icon.png"
+  "icon": "resources/icon.png",
+  "keywords": [
+    "leetcode",
+    "algorithms",
+    "interview",
+    "practice",
+    "spaced repetition"
+  ],
+  "homepage": "https://github.com/pg56714/leetcode-practice#readme",
+  "bugs": {
+    "url": "https://github.com/pg56714/leetcode-practice/issues"
+  },
+  "preview": true
 }

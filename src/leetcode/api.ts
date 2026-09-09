@@ -33,13 +33,13 @@ interface QuestionNode {
 }
 
 /** One page of the problem set. */
-export interface ProblemPage {
+interface ProblemPage {
   total: number;
   problems: ProblemSummary[];
 }
 
 /** Thrown when LeetCode answers, but with something other than data. */
-export class LeetCodeError extends Error {}
+class LeetCodeError extends Error {}
 
 export class Api {
   constructor(private readonly session: Session) {}
@@ -212,9 +212,4 @@ export function toSummary(node: QuestionNode): ProblemSummary {
     status: node.status,
     acRate: node.acRate ?? null,
   };
-}
-
-/** The page a human would open for this problem. */
-export function problemUrl(slug: string): string {
-  return `${ORIGIN}/problems/${encodeURIComponent(slug)}/`;
 }
