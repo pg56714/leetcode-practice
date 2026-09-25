@@ -148,6 +148,11 @@ export async function createProblemFolder(
 
 /** Reads the metadata beside a solution file, or undefined when there is none. */
 export async function readMetadata(solution: vscode.Uri): Promise<ProblemMetadata | undefined> {
+  const fileName = solution.path.split('/').at(-1);
+  if (fileName === METADATA_NAME || fileName === TESTCASES_NAME) {
+    return undefined;
+  }
+
   const metadataUri = vscode.Uri.joinPath(solution, '..', METADATA_NAME);
   try {
     const raw = await vscode.workspace.fs.readFile(metadataUri);

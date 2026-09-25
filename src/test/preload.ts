@@ -21,7 +21,7 @@ mock.module('vscode', () => ({
     joinPath: (base: { fsPath: string }, ...parts: string[]) => ({
       fsPath: [base.fsPath, ...parts].join('/'),
     }),
-    file: (fsPath: string) => ({ fsPath }),
+    file: (fsPath: string) => ({ fsPath, path: fsPath.replaceAll('\\', '/') }),
     parse: (value: string) => ({ fsPath: value, toString: () => value }),
   },
   workspace: {

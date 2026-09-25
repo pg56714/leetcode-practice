@@ -6,6 +6,11 @@ All notable changes to this extension are recorded here, following
 
 ## [Unreleased]
 
+## [0.1.2]
+
+- Remove the Marketplace Preview badge.
+- Prevent test cases and metadata files from being treated as solutions.
+
 ## [0.1.1]
 
 - Use a unique Marketplace extension name and display name for the initial publication.
@@ -47,6 +52,7 @@ First working version.
 - A test run reports `status_msg: "Accepted"` whenever the code merely ran,
   whatever it returned, so correctness is read from `correct_answer` instead.
 
-[unreleased]: https://github.com/pg56714/leetcode-practice/compare/v0.1.1...HEAD
+[unreleased]: https://github.com/pg56714/leetcode-practice/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/pg56714/leetcode-practice/releases/tag/v0.1.2
 [0.1.1]: https://github.com/pg56714/leetcode-practice/releases/tag/v0.1.1
 [0.1.0]: https://github.com/pg56714/leetcode-practice/releases/tag/v0.1.0

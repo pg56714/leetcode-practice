@@ -1,5 +1,7 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, spyOn, test } from 'bun:test';
+import * as vscode from 'vscode';
 import { splitCases } from '../commands/runSolution';
+import { readMetadata } from '../workspace/problemFiles';
 import { completeTemplate } from '../workspace/templates';
 
 /**
@@ -68,5 +70,33 @@ describe('splitCases', () => {
 
   test('has nothing to split when the file is empty', () => {
     expect(splitCases('', 2)).toEqual([]);
+  });
+});
+
+describe('readMetadata', () => {
+  test('recognizes solution files but ignores the metadata and test case files', async () => {
+    const metadata = {
+      questionId: '1',
+      questionFrontendId: '1',
+      titleSlug: 'two-sum',
+      title: 'Two Sum',
+      difficulty: 'Easy',
+      lang: 'python3',
+      linesPerCase: 2,
+      openedAt: '2026-01-01T00:00:00.000Z',
+    };
+    const readFile = spyOn(vscode.workspace.fs, 'readFile').mockResolvedValue(
+      new TextEncoder().encode(JSON.stringify(metadata)),
+    );
+
+    try {
+      const file = (name: string) => vscode.Uri.file(`C:\\solutions\\1-two-sum\\${name}`);
+      expect(await readMetadata(file('testcases.txt'))).toBeUndefined();
+      expect(await readMetadata(file('.metadata.json'))).toBeUndefined();
+      expect(await readMetadata(file('main.py'))).toEqual(metadata);
+      expect(readFile).toHaveBeenCalledTimes(1);
+    } finally {
+      readFile.mockRestore();
+    }
   });
 });
