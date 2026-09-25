@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "leetcode-practice",
+      "name": "leetcode-practice-sam56714",
       "dependencies": {
         "impit": "^0.14.5",
         "xss": "^1.0.15",

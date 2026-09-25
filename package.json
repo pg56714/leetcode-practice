@@ -1,8 +1,8 @@
 {
-  "name": "leetcode-practice",
-  "displayName": "LeetCode Practice",
+  "name": "leetcode-practice-sam56714",
+  "displayName": "LeetCode Practice: Spaced Repetition",
   "description": "Solve LeetCode problems in VS Code, with a workflow built around spaced repetition.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "sam56714",
   "license": "MIT",
   "repository": {
