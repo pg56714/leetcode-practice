@@ -15,7 +15,7 @@
  */
 
 import { existsSync } from 'node:fs';
-import { copyFile, mkdir, readdir, stat } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, readdir, stat } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -64,7 +64,6 @@ async function copyPackage(name) {
 
   let copied = 0;
   let unchanged = 0;
-  let locked = 0;
 
   for (const file of await filesUnder(from)) {
     const source = join(from, file);
@@ -73,7 +72,10 @@ async function copyPackage(name) {
 
     if (existsSync(destination)) {
       const [current, existing] = await Promise.all([stat(source), stat(destination)]);
-      if (current.size === existing.size) {
+      if (
+        current.size === existing.size &&
+        (await readFile(source)).equals(await readFile(destination))
+      ) {
         unchanged++;
         continue;
       }
@@ -85,16 +87,17 @@ async function copyPackage(name) {
     } catch (err) {
       const code = /** @type {{ code?: string }} */ (err).code;
       if ((code === 'EPERM' || code === 'EBUSY') && existsSync(destination)) {
-        console.warn(`  ${file} is in use and differs; close the Extension Development Host`);
-        locked++;
+        throw new Error(
+          `${name}/${file} is in use and differs; close the Extension Development Host and rebuild`,
+          { cause: err },
+        );
       } else {
         throw err;
       }
     }
   }
 
-  const lockedNote = locked > 0 ? `, ${locked} locked` : '';
-  console.log(`${name}: ${copied} copied, ${unchanged} already current${lockedNote}`);
+  console.log(`${name}: ${copied} copied, ${unchanged} already current`);
   return true;
 }
 
