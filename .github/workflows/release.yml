@@ -53,13 +53,28 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # Marketplace Trusted Publishing: vsce trades the GitHub OIDC token for a
+      # short-lived Marketplace credential, so no PAT is stored as a secret.
+      id-token: write
     steps:
       - uses: actions/download-artifact@v7
         with:
           path: artifacts
           merge-multiple: true
 
-      - uses: softprops/action-gh-release@v3
+      # A manual run from a branch republishes to the Marketplace only; a GitHub
+      # release needs a tag to hang off.
+      - if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v3
         with:
           files: artifacts/*.vsix
           generate_release_notes: true
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      # Each VSIX carries its own target platform. --skip-duplicate makes a rerun
+      # after a partial failure publish only the targets still missing.
+      - name: Publish to the Marketplace
+        run: npx --yes @vscode/vsce@4.1.0 publish --oidc --skip-duplicate --packagePath artifacts/*.vsix
