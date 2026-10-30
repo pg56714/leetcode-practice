@@ -22,4 +22,5 @@ dist/**/*.map
 judge-shapes*.json
 
 # Notes for tools, not for anyone installing this
+AGENTS.md
 CLAUDE.md

@@ -198,7 +198,7 @@ and no network. The scripts under `scripts/` do talk to the API and are run by
 hand.
 
 Conventions and the LeetCode API behaviour found by probing are in
-[CLAUDE.md](CLAUDE.md).
+[AGENTS.md](AGENTS.md).
 
 ## Licence
 

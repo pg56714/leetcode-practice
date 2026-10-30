@@ -163,7 +163,7 @@ bun test
 資料用真實跑出來的 payload 當 fixture，所以不需要憑證也不需要網路。
 `scripts/` 底下那些會打真實 API，維持手動執行。
 
-慣例與已知的 LeetCode API 行為記在 [CLAUDE.md](CLAUDE.md)。
+慣例與已知的 LeetCode API 行為記在 [AGENTS.md](AGENTS.md)。
 
 ## 授權
 
