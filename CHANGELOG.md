@@ -6,6 +6,10 @@ All notable changes to this extension are recorded here, following
 
 ## [Unreleased]
 
+## [0.1.3]
+
+- Upgrade the build dependency esbuild to 0.28.2 (GHSA-67mh-4wv8-2f99).
+
 ## [0.1.2]
 
 - Remove the Marketplace Preview badge.
@@ -52,7 +56,8 @@ First working version.
 - A test run reports `status_msg: "Accepted"` whenever the code merely ran,
   whatever it returned, so correctness is read from `correct_answer` instead.
 
-[unreleased]: https://github.com/pg56714/leetcode-practice/compare/v0.1.2...HEAD
+[unreleased]: https://github.com/pg56714/leetcode-practice/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/pg56714/leetcode-practice/releases/tag/v0.1.3
 [0.1.2]: https://github.com/pg56714/leetcode-practice/releases/tag/v0.1.2
 [0.1.1]: https://github.com/pg56714/leetcode-practice/releases/tag/v0.1.1
 [0.1.0]: https://github.com/pg56714/leetcode-practice/releases/tag/v0.1.0
