@@ -114,9 +114,11 @@ export async function runSolution(
   const heading = `${metadata.questionFrontendId}. ${metadata.title}`;
 
   await editor.document.save();
-  panel.waiting(heading);
 
   try {
+    // Inside the try: if the panel cannot be written to, that is a failure to
+    // report like any other, not an exception escaping the command.
+    panel.waiting(heading);
     await vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,

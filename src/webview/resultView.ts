@@ -82,6 +82,14 @@ export class ResultView implements vscode.WebviewViewProvider {
 
   resolveWebviewView(view: vscode.WebviewView): void {
     this.view = view;
+    // Hiding the view from its context menu disposes it, and a disposed webview
+    // throws on every write. Forgetting it sends the next render through the
+    // focus command instead, which brings the view back.
+    view.onDidDispose(() => {
+      if (this.view === view) {
+        this.view = undefined;
+      }
+    });
     view.webview.options = { enableScripts: false };
     view.webview.html = this.html;
     if (this.heading !== '') {
