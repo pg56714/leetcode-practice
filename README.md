@@ -72,6 +72,11 @@ with "the session may have expired" and you sign in again.
   and search is the way in. A numeric query matches the number by prefix, so
   typing `17` surfaces 17, 170 and 171 rather than being buried by the 1700s.
 
+A submission marks its problem straight away, in every view that shows it:
+solved when accepted, attempted when not. There is no waiting for the weekly
+refetch. Signing in or out, here or in another window, refetches what depends
+on the account.
+
 ### Icons: colour is difficulty, shape is progress
 
 One glyph answers both "how hard" and "have I done this":
@@ -94,14 +99,16 @@ A folder appears under `storagePath`, named `<number>-<titleSlug>`:
 3028-ant-on-the-boundary/
 ├─ main.py           # LeetCode's template
 ├─ testcases.txt     # every example case
-└─ .metadata.json    # both ids, language, lines per test case
+└─ .metadata.json    # both ids, each file's language, lines per test case
 ```
 
 The code opens in the editor and the statement opens beside it without taking
 focus, so the cursor lands where the typing happens.
 
 - **Reopening a problem never overwrites work.** An existing `main.*` or
-  `testcases.txt` is left exactly as it was.
+  `testcases.txt` is left exactly as it was, and so is the language each file
+  was written in: a `main.sql` written for PostgreSQL stays PostgreSQL, even
+  though database problems do not offer the default language.
 - Python templates get the typing imports **they actually reference**. LeetCode
   serves `def twoSum(self, nums: List[int])` with no import, and since Python
   evaluates annotations at definition time, that file raises `NameError` when run
@@ -116,7 +123,9 @@ The button in the editor title bar lists the languages that problem offers, 19
 of them for most. Picking one writes that language's template beside the
 existing file rather than replacing it, so a problem can hold `main.py` and
 `main.rs` at once — redoing a solved problem in another language is a practice
-technique, not an accident. Test and Submit use whichever file is open.
+technique, not an accident. Test and Submit use whichever file is open. SQL
+dialects all share `main.sql`, so picking another dialect keeps the file and
+records the new dialect for it.
 
 ### Testing and submitting
 
@@ -124,14 +133,20 @@ With a solution file open, `Ctrl+;` runs it against the cases in
 `testcases.txt` and `Ctrl+Enter` submits it; both also sit as buttons in the
 editor title bar. Results appear in the **LeetCode Results** panel at the
 bottom, alongside Terminal and Output: verdict, timing, each case next to its
-expected output, and compile or runtime errors when there are any. They sit
-there rather than in an editor tab because a result is something to glance at
-while the code stays on screen. A submission asks for confirmation first, since it is recorded against
-the account.
+expected output, and compile or runtime errors when there are any. Each case is
+marked by the judge's own per-case verdict rather than by comparing the printed
+answer with the expected one. They sit there rather than in an editor tab because
+a result is something to glance at while the code stays on screen. A submission
+asks for confirmation first, since it is recorded against the account.
 
-The language comes from the file's own extension, not the folder's metadata: a
-problem can hold `main.py` and `main.rs` at once, and the one being submitted
-is the one in front of you.
+Testing uses `testcases.txt` as the editor shows it, saved or not. Runs go one
+at a time: a second press while LeetCode is still judging says so instead of
+earning a 429.
+
+Each file submits as the language recorded when it was written, not the
+folder's: a problem can hold `main.py` and `main.rs` at once, and the one being
+submitted is the one in front of you. Only solution files get the buttons; a
+`notes.md` beside the code does not.
 
 **Cloudflare.** The judge endpoints are behind bot mitigation that fingerprints
 the TLS handshake before reading a single header — measured on
@@ -148,7 +163,7 @@ module, so a VSIX is platform specific.
 | --- | --- |
 | `leetcodePractice.storagePath` | Where problem folders are created. Empty means `solutions/` under the first workspace folder. |
 | `leetcodePractice.defaultLanguage` | Which language template a problem opens with (`python3`, `cpp`, `rust`, …). |
-| `leetcodePractice.studyPlans` | Which study plans the sidebar shows, by the slug in their URL. |
+| `leetcodePractice.studyPlans` | Which study plans the sidebar shows, by the slug in their URL. An empty list shows none. |
 
 Three commands have no button, and live in the palette: **Change Default
 Language**, **Sign In with Cookie**, and **Clear Cache**, which throws away the

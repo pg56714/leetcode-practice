@@ -7,7 +7,9 @@ collaborators.
 ## Language
 
 - **Commit messages, code comments, identifiers, and this file: English**
-- **README: Traditional Chinese** — it is what the human reads
+- **README: English** in [README.md](README.md), with the Traditional Chinese
+  translation in [README.zh-TW.md](README.zh-TW.md). A change to one is a change
+  to both
 
 ## Commits
 
@@ -44,14 +46,26 @@ type(scope): subject
 src/
 ├─ extension.ts        # activate: wire dependencies, register commands and views
 ├─ log.ts              # single output channel, created lazily
+├─ commands/           # one module per command group; common.ts has the shared
+│                      #   "which problem is open" preamble and error reporting
 ├─ leetcode/
+│   ├─ http.ts         # origin, request deadline, credential headers
 │   ├─ session.ts      # credentials, secret storage, cookie parsing
-│   ├─ api.ts          # GraphQL and REST calls
+│   ├─ webAuth.ts      # browser handoff sign-in, through a URI handler
+│   ├─ api.ts          # GraphQL calls
 │   ├─ queries.ts      # GraphQL documents
+│   ├─ rest.ts         # the judge endpoints, through impit
+│   ├─ judge.ts        # reading judge payloads
 │   ├─ catalogue.ts    # problem set cache in globalStorage
+│   ├─ lists.ts        # study plans, the reader's lists, contests
+│   ├─ solutions.ts    # community solutions
+│   ├─ languages.ts    # language slugs and file extensions
 │   └─ types.ts        # domain types
 ├─ views/              # TreeDataProviders
-└─ ui/                 # status bar and friends
+├─ webview/            # statement panel, results view
+├─ workspace/          # problem folders, their metadata, templates
+├─ ui/                 # status bar and friends
+└─ test/               # bun tests, the vscode stub, recorded payloads
 ```
 
 ## Known LeetCode API behaviour
@@ -76,6 +90,13 @@ Found by probing. None of it appears in any official documentation:
   what `status_msg` says
 - Per-case arrays (`code_answer`, `expected_code_answer`, `std_output_list`)
   carry one trailing empty entry beyond the number of cases
+- `compare_result` is a string with one character per case, "1" where the case
+  passed: "11" and "00" on two-case test runs, with no trailing extra. A
+  two-sum submission carries 65 characters, one per hidden test. Case marks are
+  read from it rather than from comparing printed answers, which would fail an
+  answer given in another order. Whether it marks such an answer "1" is what
+  `scripts/probe-judge-shapes.mjs` case 6 records; no fixture holds that run
+  yet
 - Python syntax errors come back as `Runtime Error` with `full_runtime_error`,
   not as a compile error
 - `code_output` is an array on a test run and a string on a submission;
@@ -117,10 +138,17 @@ Found by probing. None of it appears in any official documentation:
   (Ascension I, Challenge I), not the plans anyone recognises
 - An `interpret_id` looks like `runcode_1788854646.6059482_R6qaNhtKMm`, not a
   number, so it is a string
+- Language slugs depend on the problem. Database problems offer mysql, mssql,
+  postgresql, oraclesql and pythondata (Pandas), in that order, and **never
+  python3**; shell problems offer only bash. So a default of python3 is not
+  offered everywhere, and one extension can belong to several slugs — which is
+  why each solution file records its own language
 
 ## Verifying
 
-- `bun run typecheck`, `bun run lint` and `bun test` after changes
+- `bun run typecheck`, `bun run lint` and `bun test` after changes. Type
+  checking runs twice: once with Bun's types, for the tests, and once without,
+  so extension code cannot lean on a Bun global that VS Code's Node lacks
 - Tests cover the pure logic — payload reading, escaping, language rules,
   normalisation — using payloads recorded from real runs as fixtures. They need
   no credentials and no network, so they run in CI
@@ -143,13 +171,18 @@ publishes them to the Marketplace
 3. `git tag -a vX.Y.Z -m "Release vX.Y.Z"`, then `git push origin vX.Y.Z`
 
 - **The Marketplace reads `version` from `package.json`, never the tag.** A tag
-  pushed without the bump republishes the old version, which `--skip-duplicate`
-  turns into a silent no-op rather than an error
+  pushed without the bump would republish the old version, which
+  `--skip-duplicate` turns into a silent no-op, so the workflow's first job
+  fails the run when the tag and `package.json` disagree
 - Marketplace publishing uses Trusted Publishing: the `sam56714` publisher has
   a policy trusting this repository's `release.yml`, and vsce exchanges the
   job's GitHub OIDC token for a 15 minute credential. There is no PAT and no
   secret. **Renaming the workflow file breaks publishing** until the policy is
   updated to match
+- The `publish` job is the only one holding `id-token: write`, and runs nothing
+  but GitHub's own actions and the pinned vsce: any step in that job could
+  mint the token. Third-party actions are pinned to a commit, with the version
+  in a comment
 - To push an already tagged version to the Marketplace again, run the workflow
   by hand from `main` (`gh workflow run release.yml --ref main`). Off a tag it
   skips the GitHub release and only publishes. It builds whatever `main` holds,

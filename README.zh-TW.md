@@ -58,6 +58,9 @@ session 幾週後會過期，屆時 Test / Submit 會開始出現「session may 
   未搜尋時只列前 500 題（四千列沒人會滑，搜尋才是入口）。
   搜尋純數字時比對題號前綴，所以打 `17` 會看到 17、170、171… 而不是被 1700 系列淹沒
 
+提交後，所有顯示這題的地方會立刻更新：通過就標成已解出，沒過就標成試過，不必等一週一次的重抓。
+在這個視窗或其他視窗登入、登出，跟帳號有關的內容都會重新抓。
+
 ### 圖示：顏色帶難度，形狀帶進度
 
 一個圖示同時回答「多難」和「我做過了嗎」：
@@ -79,12 +82,14 @@ session 幾週後會過期，屆時 Test / Submit 會開始出現「session may 
 3028-ant-on-the-boundary/
 ├─ main.py           # LeetCode 的模板
 ├─ testcases.txt     # 全部範例測資
-└─ .metadata.json    # 題號、內部 id、語言、一組測資佔幾行
+└─ .metadata.json    # 題號、內部 id、每個檔案的語言、一組測資佔幾行
 ```
 
 程式碼開在編輯器，題目說明開在旁邊的面板（不搶焦點，游標直接落在編輯器）。
 
-- **重開同一題不會覆蓋你寫過的東西** — 既有的 `main.*` 與 `testcases.txt` 一律保留
+- **重開同一題不會覆蓋你寫過的東西** — 既有的 `main.*` 與 `testcases.txt` 一律保留，
+  每個檔案記錄的語言也不變：用 PostgreSQL 寫的 `main.sql` 重開後還是 PostgreSQL，
+  即使資料庫題沒有提供預設語言
 - Python 模板會補上**它自己真正用到的** typing 匯入。LeetCode 給的模板寫
   `def twoSum(self, nums: List[int])` 但沒有 import，直接在本機跑會 `NameError`；
   補的只有模板提到的名字（`two-sum` 只補 `List`、`add-two-numbers` 只補 `Optional`），
@@ -96,16 +101,22 @@ session 幾週後會過期，屆時 Test / Submit 會開始出現「session may 
 編輯器標題列的按鈕會列出這題支援的語言（多數題目 19 種）。選了之後，新語言的模板會
 **寫在原檔案旁邊**而不是取代它 —— 同一題可以同時有 `main.py` 和 `main.rs`，
 因為「用另一個語言重寫解過的題」是練習方法，不是意外。Test / Submit 一律看你開著哪個檔案。
+各種 SQL 方言共用 `main.sql`，所以改選別的方言時會沿用同一個檔案，並記下新的方言。
 
 ### 測試與提交
 
 開著解題檔時，`Ctrl+;` 拿 `testcases.txt` 的測資跑一次、`Ctrl+Enter` 正式提交，
 兩個也都在編輯器標題列有按鈕。結果顯示在底部的 **LeetCode Results** 面板（跟終端機、輸出同一排）：
 判定、時間記憶體、每組測資與預期輸出並排、以及編譯或執行期錯誤。
+每組測資是否通過，看判題系統對各組的判定，而不是比對輸出文字和預期輸出。
 放在那裡而不是編輯器分頁，是因為結果是「瞄一眼」的東西，程式碼應該留在畫面上。提交會先問一次，因為那會記在你的帳號上。
 
-語言看**檔案本身的副檔名**，不是資料夾的 metadata —— 同一題可以同時有 `main.py`
-和 `main.rs`，你在哪個檔案按提交就送那個語言。
+測試用的是 `testcases.txt` 在編輯器裡的內容，沒存檔也算。一次只跑一個：
+LeetCode 還在判上一個時再按，只會提示你，而不是吃一個 429。
+
+每個檔案送出的語言是**建立它時記下的語言**，不是資料夾的 —— 同一題可以同時有 `main.py`
+和 `main.rs`，你在哪個檔案按提交就送那個語言。只有解題檔才有這些按鈕，
+放在旁邊的 `notes.md` 不會有。
 
 **關於 Cloudflare**：判題端點有機器人防護，它在讀任何標頭之前先驗 TLS 指紋 ——
 實測 `interpret_solution`、`submit`、`check` 三個端點，用 Node 自己的 HTTP 堆疊
@@ -119,7 +130,7 @@ session 幾週後會過期，屆時 Test / Submit 會開始出現「session may 
 | --- | --- |
 | `leetcodePractice.storagePath` | 題目資料夾建在哪。留空則用第一個 workspace 資料夾底下的 `solutions/` |
 | `leetcodePractice.defaultLanguage` | 開題時用哪個語言的模板（`python3`、`cpp`、`rust`…） |
-| `leetcodePractice.studyPlans` | 側邊欄要顯示哪些學習計畫，用網址裡的 slug |
+| `leetcodePractice.studyPlans` | 側邊欄要顯示哪些學習計畫，用網址裡的 slug。空清單就不顯示 |
 
 有三個指令沒有按鈕、只在命令面板裡：**Change Default Language**、
 **Sign In with Cookie**、以及 **Clear Cache**（丟掉題庫快取與讀過的解答，
