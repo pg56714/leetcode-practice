@@ -1,0 +1,10 @@
+{
+  // The extension runs on VS Code's Node, never on Bun, so its code is checked
+  // without Bun's globals: a stray Bun.file would otherwise pass the type
+  // checker and fail on first use. tsconfig.json keeps them for the tests.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "exclude": ["node_modules", "dist", "out", "src/test"]
+}
