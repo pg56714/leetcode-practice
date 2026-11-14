@@ -88,6 +88,20 @@ export function casePassed(result: JudgeResult, index: number): boolean {
   return want === undefined || result.answers?.[index] === want;
 }
 
+/**
+ * A problem's status after a submission, in the problem set's vocabulary.
+ *
+ * Accepted means solved. A rejection marks an untouched problem as attempted
+ * but never takes a solve back: once a problem has been accepted it stays
+ * "ac" on LeetCode, whatever later attempts do, and so it does here.
+ */
+export function statusAfterSubmission(current: string | null, accepted: boolean): string | null {
+  if (accepted || current === 'ac') {
+    return 'ac';
+  }
+  return 'notac';
+}
+
 /** True once the judge has stopped working on a run. */
 export function isSettled(payload: unknown): boolean {
   const state = (payload as CheckPayload | null)?.state;

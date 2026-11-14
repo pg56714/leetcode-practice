@@ -58,6 +58,9 @@ async function pollUntilDone(
 /** Set while a run is in progress, from its first prompt to its result. */
 let judging = false;
 
+/** Told about each judged submission, so the sidebar can mark the problem. */
+export type SubmissionListener = (slug: string, accepted: boolean) => void;
+
 /**
  * Runs the active solution file, either as a test or as a real submission.
  *
@@ -69,6 +72,7 @@ export async function runSolution(
   judge: JudgeApi,
   panel: ResultView,
   mode: 'test' | 'submit',
+  onSubmitted?: SubmissionListener,
 ): Promise<void> {
   if (judging) {
     void vscode.window.showInformationMessage('LeetCode is still judging the previous run.');
@@ -76,7 +80,7 @@ export async function runSolution(
   }
   judging = true;
   try {
-    await judgeActiveFile(judge, panel, mode);
+    await judgeActiveFile(judge, panel, mode, onSubmitted);
   } finally {
     judging = false;
   }
@@ -93,6 +97,7 @@ async function judgeActiveFile(
   judge: JudgeApi,
   panel: ResultView,
   mode: 'test' | 'submit',
+  onSubmitted: SubmissionListener | undefined,
 ): Promise<void> {
   const active = await activeProblem();
   if (active === undefined) {
@@ -164,6 +169,11 @@ async function judgeActiveFile(
         const result = readResult(payload);
         panel.show(heading, result, splitCases(input, metadata.linesPerCase));
         log.info(`${mode === 'test' ? 'Test' : 'Submission'} finished: ${result.verdict}`);
+        // Only a submission counts towards solved, as on LeetCode; a test run
+        // changes nothing however it went.
+        if (mode === 'submit') {
+          onSubmitted?.(metadata.titleSlug, result.accepted);
+        }
       },
     );
   } catch (err) {

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { changeLanguage } from './commands/changeLanguage';
 import { changeDefaultLanguage, clearCache, showStatement } from './commands/maintenance';
 import { openProblem } from './commands/openProblem';
-import { runSolution } from './commands/runSolution';
+import { runSolution, type SubmissionListener } from './commands/runSolution';
 import { showSolutions } from './commands/showSolutions';
 import {
   type AuthContext,
@@ -61,6 +61,14 @@ export function activate(context: vscode.ExtensionContext): void {
     },
   };
   const webAuth = new WebAuth(context.extension.id, auth);
+
+  // A judged submission updates every view showing the problem, rather than
+  // waiting for the weekly refetch to notice.
+  const recordSubmission: SubmissionListener = (slug, accepted) => {
+    catalogue.recordSubmission(slug, accepted);
+    daily.recordSubmission(slug, accepted);
+    studyLists.recordSubmission(slug, accepted);
+  };
 
   // The Test and Submit buttons only make sense on a file inside a problem
   // folder, which the metadata sitting next to it decides.
@@ -141,7 +149,7 @@ export function activate(context: vscode.ExtensionContext): void {
       runSolution(judge, results, 'test'),
     ),
     vscode.commands.registerCommand('leetcodePractice.submitSolution', () =>
-      runSolution(judge, results, 'submit'),
+      runSolution(judge, results, 'submit', recordSubmission),
     ),
     vscode.commands.registerCommand('leetcodePractice.showOutput', () => log.show()),
   );

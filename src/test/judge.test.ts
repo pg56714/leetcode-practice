@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { casePassed, isSettled, readResult } from '../leetcode/judge';
+import { casePassed, isSettled, readResult, statusAfterSubmission } from '../leetcode/judge';
 import payloads from './fixtures/judge-payloads.json';
 
 /**
@@ -132,6 +132,21 @@ describe('casePassed', () => {
   test("leaves a submission's verdicts alone, since its cases are never shown", () => {
     expect(payloads['submit-correct'].compare_result).toHaveLength(65);
     expect(readResult(payloads['submit-correct']).casesPassed).toBeUndefined();
+  });
+});
+
+describe('statusAfterSubmission', () => {
+  test('an accepted submission solves the problem', () => {
+    expect(statusAfterSubmission(null, true)).toBe('ac');
+    expect(statusAfterSubmission('notac', true)).toBe('ac');
+  });
+
+  test('a rejected one marks an untouched problem as attempted', () => {
+    expect(statusAfterSubmission(null, false)).toBe('notac');
+  });
+
+  test('but never takes a solve back, as LeetCode does not', () => {
+    expect(statusAfterSubmission('ac', false)).toBe('ac');
   });
 });
 

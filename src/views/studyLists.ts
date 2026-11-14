@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import type { Api } from '../leetcode/api';
+import { statusAfterSubmission } from '../leetcode/judge';
 import {
   DEFAULT_STUDY_PLANS,
   type FavouriteList,
@@ -104,6 +105,36 @@ export class StudyListsView implements vscode.TreeDataProvider<Node> {
       this.plans = [];
     }
     this.changed.fire();
+  }
+
+  /**
+   * Marks a problem solved or attempted after a submission, wherever it
+   * appears: one problem can sit in several plans and lists at once.
+   */
+  recordSubmission(slug: string, accepted: boolean): void {
+    let changed = false;
+    const update = (problem: ProblemSummary): ProblemSummary => {
+      if (problem.slug !== slug) {
+        return problem;
+      }
+      const status = statusAfterSubmission(problem.status, accepted);
+      if (status === problem.status) {
+        return problem;
+      }
+      changed = true;
+      return { ...problem, status };
+    };
+
+    this.plans = this.plans?.map((plan) => ({
+      ...plan,
+      groups: plan.groups.map((group) => ({ ...group, questions: group.questions.map(update) })),
+    }));
+    for (const [key, questions] of this.listQuestions) {
+      this.listQuestions.set(key, questions.map(update));
+    }
+    if (changed) {
+      this.changed.fire();
+    }
   }
 
   /**

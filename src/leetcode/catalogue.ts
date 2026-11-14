@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { describeError, log } from '../log';
 import { type Api, PAGE_SIZE, type ProblemPage } from './api';
 import { wait } from './http';
+import { statusAfterSubmission } from './judge';
 import type { ProblemSummary } from './types';
 
 /** Bump when the cached shape changes, so old files are discarded not misread. */
@@ -222,6 +223,27 @@ export class Catalogue {
         await wait(delay * attempt);
       }
     }
+  }
+
+  /**
+   * Updates one problem's solved state after a submission.
+   *
+   * The full refetch that would otherwise notice is up to a week away, and a
+   * problem left hollow after an Accepted reads as a submission that failed.
+   */
+  recordSubmission(slug: string, accepted: boolean): void {
+    const index = this.problems.findIndex((problem) => problem.slug === slug);
+    const problem = this.problems[index];
+    if (problem === undefined) {
+      return;
+    }
+    const status = statusAfterSubmission(problem.status, accepted);
+    if (status === problem.status) {
+      return;
+    }
+    this.problems[index] = { ...problem, status };
+    this.changed.fire();
+    void this.writeCache();
   }
 
   /**

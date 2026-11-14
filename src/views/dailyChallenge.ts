@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import type { Api } from '../leetcode/api';
+import { statusAfterSubmission } from '../leetcode/judge';
 import type { DailyChallenge } from '../leetcode/types';
 import { describeError, log } from '../log';
 import { problemIcon } from '../ui/icons';
@@ -35,6 +36,17 @@ export class DailyChallengeView implements vscode.TreeDataProvider<vscode.TreeIt
       log.error('Could not load the daily challenge', err);
       this.state = { kind: 'failed', reason: describeError(err) };
     }
+    this.changed.fire();
+  }
+
+  /** Marks today's problem solved or attempted after a submission of it. */
+  recordSubmission(slug: string, accepted: boolean): void {
+    if (this.state.kind !== 'ready' || this.state.daily.problem.slug !== slug) {
+      return;
+    }
+    const { daily } = this.state;
+    const status = statusAfterSubmission(daily.problem.status, accepted);
+    this.state = { kind: 'ready', daily: { ...daily, problem: { ...daily.problem, status } } };
     this.changed.fire();
   }
 
