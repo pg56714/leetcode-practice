@@ -73,6 +73,52 @@ describe('Catalogue.recordSubmission', () => {
   });
 });
 
+describe('the studyPlans setting', () => {
+  function apiCountingPlans() {
+    const asked: string[] = [];
+    const api = {
+      graphql: async (document: string, variables?: { slug?: string }) => {
+        if (document.includes('studyPlanV2Detail')) {
+          asked.push(variables?.slug ?? '');
+          throw new Error('not needed for this test');
+        }
+        return { myCreatedFavoriteList: { favorites: [] }, myCollectedFavoriteList: null };
+      },
+    } as unknown as Api;
+    return { api, asked };
+  }
+
+  test('an empty list shows no plans, rather than the defaults', async () => {
+    const config = spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({
+      get: () => [],
+    } as unknown as vscode.WorkspaceConfiguration);
+    try {
+      const { api, asked } = apiCountingPlans();
+      const nodes = await new StudyListsView(api).getChildren();
+
+      expect(asked).toEqual([]);
+      expect((nodes[0] as { text?: string } | undefined)?.text).toContain(
+        'No study plans are configured',
+      );
+    } finally {
+      config.mockRestore();
+    }
+  });
+
+  test('asks for exactly the plans named, skipping blanks', async () => {
+    const config = spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({
+      get: () => ['leetcode-75', '  ', 'top-sql-50'],
+    } as unknown as vscode.WorkspaceConfiguration);
+    try {
+      const { api, asked } = apiCountingPlans();
+      await new StudyListsView(api).getChildren();
+      expect(asked).toEqual(['leetcode-75', 'top-sql-50']);
+    } finally {
+      config.mockRestore();
+    }
+  });
+});
+
 describe('StudyListsView.recordSubmission', () => {
   test('marks the problem inside the plans that hold it', async () => {
     const config = spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({

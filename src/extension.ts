@@ -106,6 +106,11 @@ export function activate(context: vscode.ExtensionContext): void {
         auth.onAccountChanged();
       }
     }),
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration('leetcodePractice.studyPlans')) {
+        studyLists.refresh();
+      }
+    }),
     vscode.commands.registerCommand('leetcodePractice.signIn', () => webAuth.start()),
     vscode.commands.registerCommand('leetcodePractice.signInWithCookie', () =>
       signInWithPastedCookie(auth),

@@ -10,27 +10,6 @@ import {
 } from './queries';
 import type { Difficulty, ProblemSummary } from './types';
 
-/**
- * Study plans the view offers out of the box.
- *
- * LeetCode has no working query for "list the study plans" — the one that looks
- * like it (`studyPlansV2ByCatalog`) answers zero for every catalog slug tried,
- * and introspection is disabled, so there is nothing to enumerate with. Each of
- * these was checked individually against `studyPlanV2Detail`. The setting exists
- * because this list cannot discover new plans on its own.
- */
-export const DEFAULT_STUDY_PLANS = [
-  'top-interview-150',
-  'leetcode-75',
-  'top-100-liked',
-  'top-sql-50',
-  'programming-skills',
-  'dynamic-programming',
-  'graph-theory',
-  'binary-search',
-  '30-days-of-javascript',
-];
-
 export interface StudyPlanGroup {
   name: string;
   questions: ProblemSummary[];

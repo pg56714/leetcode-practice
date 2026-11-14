@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import type { Api } from '../leetcode/api';
 import { statusAfterSubmission } from '../leetcode/judge';
 import {
-  DEFAULT_STUDY_PLANS,
   type FavouriteList,
   fetchFavouriteLists,
   fetchFavouriteQuestions,
@@ -22,16 +21,26 @@ type Node =
   | { kind: 'problem'; problem: ProblemSummary }
   | { kind: 'message'; text: string };
 
-/** The plans to show, from settings, falling back to the built-in list. */
+/**
+ * The study plans to show, from settings.
+ *
+ * LeetCode has no working query that lists its plans — `studyPlansV2ByCatalog`
+ * answers zero for every catalog slug tried, and introspection is disabled — so
+ * they are named in the setting, whose default in package.json carries the
+ * ones checked against `studyPlanV2Detail`. An empty list means no plans: that
+ * is how someone who only wants their own lists says so.
+ */
 function configuredPlans(): string[] {
   const configured = vscode.workspace
     .getConfiguration('leetcodePractice')
-    .get<string[]>('studyPlans');
+    .get<unknown>('studyPlans');
 
-  if (Array.isArray(configured) && configured.length > 0) {
-    return configured.filter((slug) => typeof slug === 'string' && slug.trim() !== '');
+  if (!Array.isArray(configured)) {
+    return [];
   }
-  return DEFAULT_STUDY_PLANS;
+  return configured.filter(
+    (slug): slug is string => typeof slug === 'string' && slug.trim() !== '',
+  );
 }
 
 /**
@@ -92,7 +101,10 @@ export class StudyListsView implements vscode.TreeDataProvider<Node> {
       this.lists = lists;
       this.plans = plans;
       if (lists.length === 0 && plans.length === 0) {
-        this.failure = 'Nothing could be loaded. Sign in, or check the study plan slugs.';
+        this.failure =
+          slugs.length === 0
+            ? 'No study plans are configured, and no lists of your own were found.'
+            : 'Nothing could be loaded. Sign in, or check the study plan slugs.';
       }
       log.info(`Loaded ${lists.length} lists and ${plans.length} of ${slugs.length} study plans`);
     } catch (err) {
