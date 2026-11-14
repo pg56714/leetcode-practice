@@ -248,12 +248,20 @@ export async function readMetadata(solution: vscode.Uri): Promise<ProblemMetadat
 /**
  * Reads the test cases beside a solution file.
  *
- * Hand edits are the point of the file existing, so whatever is in it wins;
- * an empty or missing file yields an empty string, which LeetCode rejects with
+ * Hand edits are the point of the file existing, so whatever is in it wins —
+ * including edits not saved yet, since an open editor is what the reader is
+ * looking at and testing against the copy on disk would be a silent surprise.
+ * An empty or missing file yields an empty string, which LeetCode rejects with
  * a clear message of its own.
  */
 export async function readTestCases(solution: vscode.Uri): Promise<string> {
   const uri = vscode.Uri.joinPath(solution, '..', TESTCASES_NAME);
+  const open = vscode.workspace.textDocuments.find(
+    (document) => document.uri.toString() === uri.toString(),
+  );
+  if (open !== undefined) {
+    return open.getText().trim();
+  }
   try {
     const raw = await vscode.workspace.fs.readFile(uri);
     return new TextDecoder().decode(raw).trim();

@@ -7,6 +7,7 @@ import {
   fileLanguage,
   type ProblemMetadata,
   readMetadata,
+  readTestCases,
 } from '../workspace/problemFiles';
 import { completeTemplate } from '../workspace/templates';
 import { memoryFs } from './memoryFs';
@@ -140,6 +141,37 @@ describe('readMetadata', () => {
 
   test('finds nothing outside a problem folder', async () => {
     expect(await readMetadata(vscode.Uri.file('/elsewhere/main.py'))).toBeUndefined();
+  });
+});
+
+describe('readTestCases', () => {
+  let fs: ReturnType<typeof memoryFs>;
+  const open = vscode.workspace.textDocuments as unknown as vscode.TextDocument[];
+  beforeEach(() => {
+    fs = memoryFs();
+  });
+  afterEach(() => {
+    fs.restore();
+    open.length = 0;
+  });
+
+  test('reads the file beside the solution', async () => {
+    fs.write('/s/1-two-sum/testcases.txt', '[2,7,11,15]\n9\n');
+    expect(await readTestCases(vscode.Uri.file('/s/1-two-sum/main.py'))).toBe('[2,7,11,15]\n9');
+  });
+
+  test('prefers what an open editor holds, saved or not', async () => {
+    fs.write('/s/1-two-sum/testcases.txt', '[2,7,11,15]\n9\n');
+    open.push({
+      uri: vscode.Uri.file('/s/1-two-sum/testcases.txt'),
+      getText: () => '[3,3]\n6\n',
+    } as unknown as vscode.TextDocument);
+
+    expect(await readTestCases(vscode.Uri.file('/s/1-two-sum/main.py'))).toBe('[3,3]\n6');
+  });
+
+  test('is empty rather than failing when there is no file', async () => {
+    expect(await readTestCases(vscode.Uri.file('/s/1-two-sum/main.py'))).toBe('');
   });
 });
 

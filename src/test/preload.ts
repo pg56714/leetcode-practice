@@ -38,6 +38,8 @@ mock.module('vscode', () => ({
   },
   workspace: {
     getConfiguration: () => ({ get: () => undefined }),
+    // Open editors; a test that needs one pushes it and takes it out again.
+    textDocuments: [],
     fs: {
       readFile: notStubbed,
       writeFile: notStubbed,
