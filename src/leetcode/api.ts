@@ -14,6 +14,9 @@ import type {
 /** LeetCode's hard ceiling on rows per problem-set page, whatever `limit` asks. */
 export const PAGE_SIZE = 100;
 
+/** How many problems are kept in memory, the least recently used dropped first. */
+const DETAIL_CACHE_SIZE = 50;
+
 /** Shape every GraphQL response shares. */
 interface GraphQLReply<T> {
   data?: T;
@@ -41,6 +44,9 @@ export interface ProblemPage {
 class LeetCodeError extends Error {}
 
 export class Api {
+  /** Problems fetched this session, by slug, in least-recently-used order. */
+  private readonly details = new Map<string, Promise<ProblemDetail>>();
+
   constructor(private readonly session: Session) {}
 
   /**
@@ -131,12 +137,55 @@ export class Api {
   }
 
   /**
+   * One problem in full, fetched once per session.
+   *
+   * Statements and templates do not change while someone is solving, yet Show
+   * Statement and Change Language each refetched the whole problem. Calls for
+   * a problem already on its way share the one request. Failures are not kept,
+   * so the next call tries again.
+   */
+  questionDetail(slug: string): Promise<ProblemDetail> {
+    const cached = this.details.get(slug);
+    if (cached !== undefined) {
+      // Re-inserting moves it to the end, keeping the map in LRU order.
+      this.details.delete(slug);
+      this.details.set(slug, cached);
+      return cached;
+    }
+
+    const pending = this.fetchQuestionDetail(slug);
+    this.details.set(slug, pending);
+    pending.catch(() => {
+      if (this.details.get(slug) === pending) {
+        this.details.delete(slug);
+      }
+    });
+    for (const oldest of this.details.keys()) {
+      if (this.details.size <= DETAIL_CACHE_SIZE) {
+        break;
+      }
+      this.details.delete(oldest);
+    }
+    return pending;
+  }
+
+  /**
+   * Forgets every problem fetched so far.
+   *
+   * What a Premium problem holds depends on who asked, so an account change
+   * starts over.
+   */
+  forgetDetails(): void {
+    this.details.clear();
+  }
+
+  /**
    * Fetches one problem in full.
    *
    * Premium problems answer with empty content and no snippets rather than an
    * error, so an unusable answer is turned into one here.
    */
-  async questionDetail(slug: string): Promise<ProblemDetail> {
+  private async fetchQuestionDetail(slug: string): Promise<ProblemDetail> {
     const data = await this.graphql<{ question: DetailNode | null }>(QUESTION_DETAIL, {
       titleSlug: slug,
     });

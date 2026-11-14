@@ -54,6 +54,7 @@ export function activate(context: vscode.ExtensionContext): void {
     // one is wrong the moment the account changes — including one still being
     // fetched, which is why the refresh restarts rather than joins it.
     onAccountChanged: () => {
+      api.forgetDetails();
       void catalogue.refresh({ silent: true, restart: true });
       void daily.refresh();
       studyLists.refresh();

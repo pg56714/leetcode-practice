@@ -24,6 +24,80 @@ describe('isTimeout', () => {
   });
 });
 
+/** The question node LeetCode returns for one problem, trimmed to what is read. */
+function questionNode(slug: string) {
+  return {
+    question: {
+      questionId: '1',
+      questionFrontendId: '1',
+      title: slug,
+      titleSlug: slug,
+      content: '<p>Given an array…</p>',
+      difficulty: 'Easy',
+      isPaidOnly: false,
+      sampleTestCase: '[2,7,11,15]\n9',
+      exampleTestcases: '[2,7,11,15]\n9',
+      metaData: null,
+      codeSnippets: [{ lang: 'Python3', langSlug: 'python3', code: 'class Solution: pass' }],
+      topicTags: [],
+    },
+  };
+}
+
+/**
+ * Statements and templates do not change while someone is solving, yet Show
+ * Statement and Change Language each refetched the whole problem.
+ */
+describe('Api.questionDetail', () => {
+  function apiAnswering() {
+    const api = new Api(signedOut);
+    const graphql = spyOn(api, 'graphql').mockImplementation(
+      async (_document, variables) => questionNode(String(variables?.titleSlug)) as never,
+    );
+    return { api, graphql };
+  }
+
+  test('fetches a problem once, however often it is asked for', async () => {
+    const { api, graphql } = apiAnswering();
+    await Promise.all([api.questionDetail('two-sum'), api.questionDetail('two-sum')]);
+    await api.questionDetail('two-sum');
+    expect(graphql).toHaveBeenCalledTimes(1);
+  });
+
+  test('does not keep a failure, so the next call tries again', async () => {
+    const api = new Api(signedOut);
+    const graphql = spyOn(api, 'graphql')
+      .mockRejectedValueOnce(new Error('LeetCode replied with HTTP 502'))
+      .mockResolvedValueOnce(questionNode('two-sum') as never);
+
+    await expect(api.questionDetail('two-sum')).rejects.toThrow('HTTP 502');
+    expect((await api.questionDetail('two-sum')).slug).toBe('two-sum');
+    expect(graphql).toHaveBeenCalledTimes(2);
+  });
+
+  test('starts over once told to forget, as after an account change', async () => {
+    const { api, graphql } = apiAnswering();
+    await api.questionDetail('two-sum');
+    api.forgetDetails();
+    await api.questionDetail('two-sum');
+    expect(graphql).toHaveBeenCalledTimes(2);
+  });
+
+  test('keeps the fifty most recently used', async () => {
+    const { api, graphql } = apiAnswering();
+    for (let index = 0; index <= 50; index++) {
+      await api.questionDetail(`problem-${index}`);
+    }
+    expect(graphql).toHaveBeenCalledTimes(51);
+
+    await api.questionDetail('problem-50');
+    expect(graphql).toHaveBeenCalledTimes(51);
+    // The first was the least recently used, so it went to make room.
+    await api.questionDetail('problem-0');
+    expect(graphql).toHaveBeenCalledTimes(52);
+  });
+});
+
 /**
  * Without a deadline a stalled GraphQL request hangs whatever waits on it — a
  * tree view's spinner, a progress notification — and nothing says why.
