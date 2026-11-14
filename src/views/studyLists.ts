@@ -54,11 +54,14 @@ export class StudyListsView implements vscode.TreeDataProvider<Node> {
   private readonly listQuestions = new Map<string, ProblemSummary[]>();
   private loading: Promise<void> | undefined;
   private failure: string | undefined;
+  /** Bumped by every refresh, so a load that began before one knows it is stale. */
+  private generation = 0;
 
   constructor(private readonly api: Api) {}
 
   /** Discards everything loaded so the next read refetches. */
   refresh(): void {
+    this.generation++;
     this.lists = undefined;
     this.plans = undefined;
     this.listQuestions.clear();
@@ -67,6 +70,7 @@ export class StudyListsView implements vscode.TreeDataProvider<Node> {
   }
 
   private async load(): Promise<void> {
+    const generation = this.generation;
     const slugs = configuredPlans();
     try {
       // The reader's lists need a session; the plans do not. Settled rather
@@ -79,6 +83,11 @@ export class StudyListsView implements vscode.TreeDataProvider<Node> {
         fetchStudyPlans(this.api, slugs),
       ]);
 
+      if (generation !== this.generation) {
+        // A refresh landed mid-load, for a new account or new settings, so
+        // this answers a question nobody is asking any more.
+        return;
+      }
       this.lists = lists;
       this.plans = plans;
       if (lists.length === 0 && plans.length === 0) {
@@ -87,6 +96,9 @@ export class StudyListsView implements vscode.TreeDataProvider<Node> {
       log.info(`Loaded ${lists.length} lists and ${plans.length} of ${slugs.length} study plans`);
     } catch (err) {
       log.error('Could not load study lists', err);
+      if (generation !== this.generation) {
+        return;
+      }
       this.failure = describeError(err);
       this.lists = [];
       this.plans = [];
@@ -94,14 +106,32 @@ export class StudyListsView implements vscode.TreeDataProvider<Node> {
     this.changed.fire();
   }
 
+  /**
+   * Loads the root, sharing a load already in flight.
+   *
+   * A loop because a refresh can land while that load is running: it then
+   * throws its answer away, and the next round asks again.
+   */
+  private async ensureLoaded(): Promise<void> {
+    while (this.lists === undefined || this.plans === undefined) {
+      this.loading ??= this.load().finally(() => {
+        this.loading = undefined;
+      });
+      await this.loading;
+    }
+  }
+
   private async questionsFor(list: FavouriteList): Promise<ProblemSummary[]> {
     const cached = this.listQuestions.get(list.slug);
     if (cached !== undefined) {
       return cached;
     }
+    const generation = this.generation;
     try {
       const questions = await fetchFavouriteQuestions(this.api, list.slug);
-      this.listQuestions.set(list.slug, questions);
+      if (generation === this.generation) {
+        this.listQuestions.set(list.slug, questions);
+      }
       return questions;
     } catch (err) {
       log.error(`Could not load the problems in "${list.name}"`, err);
@@ -162,13 +192,7 @@ export class StudyListsView implements vscode.TreeDataProvider<Node> {
 
   async getChildren(node?: Node): Promise<Node[]> {
     if (node === undefined) {
-      if (this.lists === undefined || this.plans === undefined) {
-        // Shared so a refresh landing mid-fetch does not start a second one.
-        this.loading ??= this.load().finally(() => {
-          this.loading = undefined;
-        });
-        await this.loading;
-      }
+      await this.ensureLoaded();
       if (this.failure !== undefined) {
         return [{ kind: 'message', text: this.failure }];
       }

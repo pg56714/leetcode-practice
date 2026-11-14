@@ -10,6 +10,26 @@ function notStubbed(): never {
   throw new Error('not stubbed');
 }
 
+/** Enough of vscode.EventEmitter for code that fires events and listens to them. */
+class EventEmitter<T> {
+  private readonly listeners = new Set<(value: T) => void>();
+
+  readonly event = (listener: (value: T) => void) => {
+    this.listeners.add(listener);
+    return { dispose: () => this.listeners.delete(listener) };
+  };
+
+  fire(value: T): void {
+    for (const listener of this.listeners) {
+      listener(value);
+    }
+  }
+
+  dispose(): void {
+    this.listeners.clear();
+  }
+}
+
 /**
  * Stands in for the `vscode` module, which only exists inside the editor.
  *
@@ -47,6 +67,7 @@ mock.module('vscode', () => ({
       createDirectory: notStubbed,
     },
   },
+  EventEmitter,
   ConfigurationTarget: { Global: 1 },
   ProgressLocation: { Notification: 15, Window: 10 },
   ViewColumn: { One: 1, Two: 2, Beside: -2 },

@@ -31,6 +31,8 @@ export class Catalogue {
   private problems: ProblemSummary[] = [];
   private fetchedAt: Date | undefined;
   private inFlight: Promise<void> | undefined;
+  /** A fetch queued behind the one in flight, because that one became wrong. */
+  private queued: Promise<void> | undefined;
 
   private readonly changed = new vscode.EventEmitter<void>();
   readonly onDidChange = this.changed.event;
@@ -75,10 +77,20 @@ export class Catalogue {
    * Refetches every page.
    *
    * Concurrent calls share one fetch: the view's refresh button and a
-   * background staleness check can easily land at the same moment.
+   * background staleness check can easily land at the same moment. `restart`
+   * is for when the fetch in flight has become wrong rather than merely early.
+   * After an account change its pages carry the previous account's solved
+   * state, so one more fetch is queued behind it rather than sharing it.
    */
-  async refresh(options: { silent?: boolean } = {}): Promise<void> {
-    if (this.inFlight) {
+  async refresh(options: { silent?: boolean; restart?: boolean } = {}): Promise<void> {
+    if (this.inFlight !== undefined) {
+      if (options.restart === true) {
+        this.queued ??= this.inFlight.then(() => {
+          this.queued = undefined;
+          return this.refresh({ silent: true });
+        });
+        return this.queued;
+      }
       return this.inFlight;
     }
     this.inFlight = this.fetchAll(options.silent === true).finally(() => {
