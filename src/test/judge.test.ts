@@ -103,17 +103,20 @@ describe('casePassed', () => {
     expect(readResult(payloads['test-wrong-answer']).casesPassed).toEqual([false, false]);
   });
 
-  test('passes an answer in another order when the judge passed it', () => {
-    const result = readResult({
-      ...payloads['test-correct'],
-      code_answer: ['[1,0]', '[2,1]', ''],
-      compare_result: '11',
-    });
+  test('passes an answer in another order, as the judge did', () => {
+    // Recorded from a real run: every pair reversed, and the judge said "111".
+    const payload = payloads['test-other-order'];
+    expect(payload.code_answer[0]).toBe('[1,0]');
+    expect(payload.expected_code_answer[0]).toBe('[0,1]');
+    expect(payload.compare_result).toBe('111');
 
-    expect(result.answers?.[0]).not.toBe(result.expected?.[0]);
-    expect(casePassed(result, 0)).toBe(true);
-    expect(casePassed(result, 1)).toBe(true);
+    const result = readResult(payload);
     expect(result.accepted).toBe(true);
+    expect(result.casesPassed).toEqual([true, true, true]);
+    for (const index of [0, 1, 2]) {
+      expect(result.answers?.[index]).not.toBe(result.expected?.[index]);
+      expect(casePassed(result, index)).toBe(true);
+    }
   });
 
   test('falls back to comparing answers when the judge gave no verdict', () => {
