@@ -11,10 +11,14 @@
  *   $env:LEETCODE_COOKIE = 'LEETCODE_SESSION=...; csrftoken=...'
  *   node scripts/probe-judge-shapes.mjs judge-shapes.json
  *
- * The fourth case is a real submission and is recorded against the account, so
+ * The fifth case is a real submission and is recorded against the account, so
  * it sends a correct solution. Set INCLUDE_FAILING_SUBMIT=1 to also submit a
  * wrong one, which is the only way to see the fields a failed submission
  * carries — at the cost of a rejected attempt on the account.
+ *
+ * ONLY=6 records just the run whose answer is right but in the other order,
+ * which is what confirms that compare_result is the judge's verdict rather
+ * than a textual comparison.
  */
 
 import { writeFileSync } from 'node:fs';
@@ -35,6 +39,18 @@ const CORRECT = `class Solution:
         for i, n in enumerate(nums):
             if target - n in seen:
                 return [seen[target - n], i]
+            seen[n] = i
+        return []`;
+
+// The right pair, in the other order. Two-sum accepts either, so the case table
+// should mark both cases passed although neither answer matches the expected
+// text.
+const OTHER_ORDER = `class Solution:
+    def twoSum(self, nums, target):
+        seen = {}
+        for i, n in enumerate(nums):
+            if target - n in seen:
+                return [i, seen[target - n]]
             seen[n] = i
         return []`;
 
@@ -188,9 +204,10 @@ const plan = [
   ['3. test, syntax error', BROKEN, runTest],
   ['4. test, correct', CORRECT, runTest],
   ['5. submit, correct', CORRECT, runSubmit],
+  ['6. test, right answer in the other order', OTHER_ORDER, runTest],
 ];
 if (process.env.INCLUDE_FAILING_SUBMIT === '1') {
-  plan.push(['6. submit, wrong answer (recorded!)', WRONG, runSubmit]);
+  plan.push(['7. submit, wrong answer (recorded!)', WRONG, runSubmit]);
 }
 
 // ONLY=3 reruns a single shape, which is what recording one more case needs.
