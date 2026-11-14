@@ -165,8 +165,11 @@ A `v*` tag is the whole release. [release.yml](.github/workflows/release.yml)
 packages a VSIX on each platform runner, attaches them to a GitHub release and
 publishes them to the Marketplace
 
-1. Bump `version` in `package.json` and move the `[Unreleased]` notes in
-   [CHANGELOG.md](CHANGELOG.md) under the new version, with its compare link
+1. Bump `version` in `package.json` and add the new version to
+   [CHANGELOG.md](CHANGELOG.md), with its link, written from the commits since
+   the last tag (`git log vX.Y.Z..HEAD`). The changelog lists released
+   versions only, with no Unreleased section between releases. CI does not
+   write it: `generate_release_notes` only fills in the GitHub release page
 2. Commit as `chore(release): vX.Y.Z` and push
 3. `git tag -a vX.Y.Z -m "Release vX.Y.Z"`, then `git push origin vX.Y.Z`
 
