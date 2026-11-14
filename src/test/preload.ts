@@ -1,4 +1,14 @@
 import { mock } from 'bun:test';
+import { posix } from 'node:path';
+
+/** A file URI reduced to what the code under test reads from one. */
+function fileUri(path: string) {
+  return { scheme: 'file', path, fsPath: path, toString: () => `file://${path}` };
+}
+
+function notStubbed(): never {
+  throw new Error('not stubbed');
+}
 
 /**
  * Stands in for the `vscode` module, which only exists inside the editor.
@@ -7,7 +17,8 @@ import { mock } from 'bun:test';
  * API somewhere — a logger, a type import — so without this nothing under test
  * can even be loaded. Only the pieces the tested paths actually touch are here;
  * anything else missing will fail loudly rather than quietly returning
- * undefined, which is the behaviour to want from a stub.
+ * undefined, which is the behaviour to want from a stub. The file system
+ * throws until a test backs it, see memoryFs.ts.
  */
 mock.module('vscode', () => ({
   window: {
@@ -18,18 +29,20 @@ mock.module('vscode', () => ({
     }),
   },
   Uri: {
-    joinPath: (base: { fsPath: string }, ...parts: string[]) => ({
-      fsPath: [base.fsPath, ...parts].join('/'),
-    }),
-    file: (fsPath: string) => ({ fsPath, path: fsPath.replaceAll('\\', '/') }),
-    parse: (value: string) => ({ fsPath: value, toString: () => value }),
+    // Resolves ".." the way the real joinPath does, which is how a solution
+    // file finds the metadata beside it.
+    joinPath: (base: { path: string }, ...parts: string[]) =>
+      fileUri(posix.join(base.path, ...parts)),
+    file: (fsPath: string) => fileUri(fsPath.replaceAll('\\', '/')),
+    parse: (value: string) => ({ fsPath: value, path: value, toString: () => value }),
   },
   workspace: {
     getConfiguration: () => ({ get: () => undefined }),
     fs: {
-      readFile: () => {
-        throw new Error('not stubbed');
-      },
+      readFile: notStubbed,
+      writeFile: notStubbed,
+      stat: notStubbed,
+      createDirectory: notStubbed,
     },
   },
   ConfigurationTarget: { Global: 1 },

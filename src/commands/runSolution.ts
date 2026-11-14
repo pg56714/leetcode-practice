@@ -1,10 +1,9 @@
 import * as vscode from 'vscode';
 import { isSettled, readResult } from '../leetcode/judge';
-import { languageForExtension } from '../leetcode/languages';
 import type { JudgeApi } from '../leetcode/rest';
 import { describeError, log } from '../log';
 import type { ResultView } from '../webview/resultView';
-import { readTestCases } from '../workspace/problemFiles';
+import { fileLanguage, fileNameOf, readTestCases } from '../workspace/problemFiles';
 import { activeProblem, reportFailure } from './common';
 
 /** How long to wait between polls, and how long to keep waiting overall. */
@@ -62,9 +61,9 @@ async function pollUntilDone(
 /**
  * Runs the active solution file, either as a test or as a real submission.
  *
- * The language comes from the file's own extension rather than the metadata:
- * a problem can hold main.py and main.rs at once, and the one being submitted
- * is the one in front of the reader.
+ * The language is the one recorded for this file rather than the folder's: a
+ * problem can hold main.py and main.rs at once, and the one being submitted is
+ * the one in front of the reader.
  */
 export async function runSolution(
   judge: JudgeApi,
@@ -91,7 +90,7 @@ export async function runSolution(
     return;
   }
 
-  const lang = languageForExtension(file.fsPath, metadata.lang);
+  const lang = fileLanguage(metadata, fileNameOf(file));
   const code = editor.document.getText();
   if (code.trim() === '') {
     void vscode.window.showWarningMessage('There is nothing to send — the file is empty.');

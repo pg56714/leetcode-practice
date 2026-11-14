@@ -42,6 +42,13 @@ export function isKnownLanguage(langSlug: string): boolean {
   return langSlug in EXTENSION_BY_SLUG;
 }
 
+const KNOWN_EXTENSIONS = new Set(Object.values(EXTENSION_BY_SLUG));
+
+/** Whether some language this extension knows writes files with `extension`. */
+export function isLanguageExtension(extension: string): boolean {
+  return KNOWN_EXTENSIONS.has(extension.toLowerCase());
+}
+
 /**
  * The language slug for a solution file.
  *
