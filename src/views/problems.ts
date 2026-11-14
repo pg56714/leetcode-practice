@@ -66,7 +66,7 @@ export class ProblemsView implements vscode.TreeDataProvider<vscode.TreeItem> {
 
   private describe(): string {
     if (this.catalogue.size === 0) {
-      return 'No problems cached yet — use Refresh.';
+      return this.catalogue.busy ? 'Loading problems…' : 'No problems cached yet — use Refresh.';
     }
     const age = this.catalogue.age;
     const when = age ? age.toISOString().slice(0, 10) : 'unknown';

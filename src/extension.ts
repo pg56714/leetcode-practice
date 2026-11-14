@@ -25,12 +25,14 @@ import { ProblemPanel } from './webview/problemPanel';
 import { ResultView } from './webview/resultView';
 import { readMetadata } from './workspace/problemFiles';
 
-export async function activate(context: vscode.ExtensionContext): Promise<void> {
+const PROBLEMS_VIEW = 'leetcodePractice.problems';
+
+export function activate(context: vscode.ExtensionContext): void {
   const session = new Session(context.secrets);
   const api = new Api(session);
   const judge = new JudgeApi(session);
   const statusBar = new StatusBar();
-  const catalogue = new Catalogue(api, context.globalStorageUri);
+  const catalogue = new Catalogue(api, context.globalStorageUri, { progressView: PROBLEMS_VIEW });
 
   const daily = new DailyChallengeView(api);
   const problems = new ProblemsView(catalogue);
@@ -39,7 +41,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const problemPanel = new ProblemPanel();
   const results = new ResultView();
 
-  const problemsView = vscode.window.createTreeView('leetcodePractice.problems', {
+  const problemsView = vscode.window.createTreeView(PROBLEMS_VIEW, {
     treeDataProvider: problems,
   });
   problems.attach(problemsView);
@@ -144,9 +146,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('leetcodePractice.showOutput', () => log.show()),
   );
 
-  void trackSolutionContext(vscode.window.activeTextEditor);
-  await publishStatus(api, statusBar);
+  // Nothing here waits on the network. The cache is local and quick, the
+  // sign-in check is a round trip to LeetCode, and a view that waited for the
+  // second before showing the first would sit empty for no reason.
   void catalogue.prime();
+  void publishStatus(api, statusBar);
+  void trackSolutionContext(vscode.window.activeTextEditor);
   log.info('LeetCode Practice activated');
 }
 

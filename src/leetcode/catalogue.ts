@@ -22,6 +22,8 @@ const RETRY_DELAY_MS = 1000;
 type FetchProgress = vscode.Progress<{ message?: string; increment?: number }>;
 
 export interface CatalogueOptions {
+  /** The view that shows a progress bar while fetching in the background. */
+  progressView?: string;
   /** Overrides RETRY_DELAY_MS, which tests have no reason to sit through. */
   retryDelayMs?: number;
 }
@@ -46,6 +48,8 @@ export class Catalogue {
   private inFlight: Promise<void> | undefined;
   /** A fetch queued behind the one in flight, because that one became wrong. */
   private queued: Promise<void> | undefined;
+  /** Set once the cache has been read; until then, empty means "not yet". */
+  private primed = false;
 
   private readonly changed = new vscode.EventEmitter<void>();
   readonly onDidChange = this.changed.event;
@@ -65,6 +69,16 @@ export class Catalogue {
   }
 
   /**
+   * True until the cache has been read, and while a fetch is running.
+   *
+   * What an empty view should say depends on it: "loading" while there is
+   * something to wait for, "use Refresh" once there is not.
+   */
+  get busy(): boolean {
+    return !this.primed || this.inFlight !== undefined;
+  }
+
+  /**
    * Makes the catalogue usable: cache if possible, network otherwise.
    *
    * A stale cache is served immediately and refreshed behind the user's back —
@@ -72,6 +86,7 @@ export class Catalogue {
    */
   async prime(): Promise<void> {
     const cached = await this.readCache();
+    this.primed = true;
     if (cached) {
       this.problems = cached.problems;
       this.fetchedAt = new Date(cached.fetchedAt);
@@ -107,21 +122,32 @@ export class Catalogue {
       }
       return this.inFlight;
     }
+    // Fired at both ends, since starting and finishing both change `busy`, and
+    // with it what an empty view says.
     this.inFlight = this.fetchAll(options.silent === true).finally(() => {
       this.inFlight = undefined;
+      this.changed.fire();
     });
+    this.changed.fire();
     return this.inFlight;
   }
 
   private async fetchAll(silent: boolean): Promise<void> {
     try {
-      if (silent) {
-        await this.fetchPages();
-      } else {
+      if (!silent) {
         await vscode.window.withProgress(
           { location: vscode.ProgressLocation.Notification, title: 'Fetching LeetCode problems' },
           (progress) => this.fetchPages(progress),
         );
+      } else if (this.options.progressView !== undefined) {
+        // A background fetch gets the thin bar across its view instead of a
+        // notification: worth seeing, not worth interrupting anyone for.
+        await vscode.window.withProgress(
+          { location: { viewId: this.options.progressView } },
+          (progress) => this.fetchPages(progress),
+        );
+      } else {
+        await this.fetchPages();
       }
     } catch (err) {
       log.error('Could not fetch the problem set', err);
@@ -130,8 +156,8 @@ export class Catalogue {
           `Could not fetch the problem set: ${describeError(err)}`,
         );
       }
-      // Keep whatever was already loaded; a failed refresh should not empty the view.
-      this.changed.fire();
+      // Whatever was loaded before stays: a failed refresh should not empty the
+      // view. refresh() fires the change that redraws it.
     }
   }
 
@@ -174,7 +200,6 @@ export class Catalogue {
     this.problems = collected;
     this.fetchedAt = new Date();
     await this.writeCache();
-    this.changed.fire();
     log.info(`Fetched ${collected.length} of ${total} problems`);
   }
 

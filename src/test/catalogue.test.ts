@@ -112,6 +112,59 @@ describe('fetching the problem set', () => {
   });
 });
 
+/**
+ * What an empty Problems view says. It used to read "No problems cached yet —
+ * use Refresh." while the cache was still being read, and through the whole
+ * first fetch, which is the opposite of what was happening.
+ */
+describe('Catalogue.busy', () => {
+  let fs: ReturnType<typeof memoryFs>;
+  beforeEach(() => {
+    fs = memoryFs();
+  });
+  afterEach(() => fs.restore());
+
+  test('is busy until the cache has been read, and while a fetch runs', async () => {
+    fs.write(
+      '/storage/problems.json',
+      JSON.stringify({ version: 1, fetchedAt: new Date().toISOString(), problems: [summary(1)] }),
+    );
+    let release: () => void = () => undefined;
+    const api = {
+      problemPage: () =>
+        new Promise((resolve) => {
+          release = () => resolve({ total: 1, problems: [summary(1)] });
+        }),
+    } as unknown as Api;
+    const catalogue = new Catalogue(api, vscode.Uri.file('/storage'));
+
+    expect(catalogue.busy).toBe(true);
+    await catalogue.prime();
+    expect(catalogue.busy).toBe(false);
+    expect(catalogue.size).toBe(1);
+
+    const refreshing = catalogue.refresh({ silent: true });
+    expect(catalogue.busy).toBe(true);
+    release();
+    await refreshing;
+    expect(catalogue.busy).toBe(false);
+  });
+
+  test('says so when it changes, so the view can redraw its message', async () => {
+    // No cache, so priming means the first full fetch.
+    const api = { problemPage: async () => ({ total: 1, problems: [summary(1)] }) };
+    const catalogue = new Catalogue(api as unknown as Api, vscode.Uri.file('/storage'));
+    const seen: boolean[] = [];
+    catalogue.onDidChange(() => seen.push(catalogue.busy));
+
+    await catalogue.prime();
+
+    expect(seen.at(0)).toBe(true);
+    expect(seen.at(-1)).toBe(false);
+    expect(catalogue.size).toBe(1);
+  });
+});
+
 describe('Catalogue.search', () => {
   let fs: ReturnType<typeof memoryFs>;
   let catalogue: Catalogue;

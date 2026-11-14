@@ -12,7 +12,11 @@ export class StatusBar {
 
   constructor() {
     this.item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    this.render(undefined);
+    // Neutral until the first check answers. Activation no longer waits for
+    // it, and "signed out" followed a moment later by a name reads as a
+    // sign-out that fixed itself.
+    this.item.text = '$(account) LeetCode';
+    this.item.tooltip = 'Checking the LeetCode sign-in…';
     this.item.show();
   }
 
