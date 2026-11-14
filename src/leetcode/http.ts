@@ -12,6 +12,18 @@ export const ORIGIN = 'https://leetcode.com';
  */
 export const REQUEST_TIMEOUT_MS = 20_000;
 
+/**
+ * Whether a request failed by running out of time.
+ *
+ * Node's fetch rejects with the signal's TimeoutError whether the headers or
+ * the body were still outstanding. AbortError is taken to mean the same,
+ * because nothing here aborts a request any other way.
+ */
+export function isTimeout(err: unknown): boolean {
+  const name = (err as { name?: unknown } | null | undefined)?.name;
+  return name === 'TimeoutError' || name === 'AbortError';
+}
+
 /** The headers that make a request count as signed in. */
 export function credentialHeaders(credentials: Credentials): Record<string, string> {
   return {

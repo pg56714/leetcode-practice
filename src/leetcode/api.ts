@@ -1,5 +1,5 @@
 import { log } from '../log';
-import { credentialHeaders, ORIGIN } from './http';
+import { credentialHeaders, isTimeout, ORIGIN, REQUEST_TIMEOUT_MS } from './http';
 import { DAILY_CHALLENGE, PROBLEM_PAGE, QUESTION_DETAIL, USER_STATUS } from './queries';
 import type { Session } from './session';
 import type {
@@ -61,17 +61,38 @@ export class Api {
       Object.assign(headers, credentialHeaders(credentials));
     }
 
-    const response = await fetch(`${ORIGIN}/graphql/`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ query: document, variables }),
-    });
+    let response: Response;
+    let text: string;
+    try {
+      // The signal covers the body as well as the headers, so an answer that
+      // starts and then stalls is abandoned too.
+      response = await fetch(`${ORIGIN}/graphql/`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ query: document, variables }),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+      text = await response.text();
+    } catch (err) {
+      if (isTimeout(err)) {
+        throw new LeetCodeError(
+          `LeetCode did not answer within ${REQUEST_TIMEOUT_MS / 1000} seconds`,
+        );
+      }
+      throw err;
+    }
 
     if (!response.ok) {
       throw new LeetCodeError(`LeetCode replied with HTTP ${response.status}`);
     }
 
-    const reply = (await response.json()) as GraphQLReply<T>;
+    let reply: GraphQLReply<T>;
+    try {
+      reply = JSON.parse(text) as GraphQLReply<T>;
+    } catch {
+      // A challenge page or a proxy's error page, rather than an answer.
+      throw new LeetCodeError('LeetCode replied with something that was not JSON');
+    }
     if (reply.errors?.length) {
       throw new LeetCodeError(reply.errors.map((e) => e.message).join('; '));
     }

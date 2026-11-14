@@ -1,5 +1,5 @@
 import { log } from '../log';
-import { credentialHeaders, ORIGIN, REQUEST_TIMEOUT_MS } from './http';
+import { credentialHeaders, isTimeout, ORIGIN, REQUEST_TIMEOUT_MS } from './http';
 import type { Session } from './session';
 
 /**
@@ -63,6 +63,7 @@ function resolveTransport(): Transport {
       fetch(url, {
         ...request,
         headers: { ...request.headers, 'User-Agent': USER_AGENT },
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       }) as unknown as Promise<RestResponse>;
   }
   return transport;
@@ -127,13 +128,23 @@ export class JudgeApi {
     slug: string,
     request: Omit<RestRequest, 'headers'>,
   ): Promise<unknown> {
-    const response = await resolveTransport()(url, {
-      ...request,
-      headers: await this.headers(slug),
-    });
+    const headers = await this.headers(slug);
+    let response: RestResponse;
+    let text: string;
+    try {
+      response = await resolveTransport()(url, { ...request, headers });
+      text = await response.text();
+    } catch (err) {
+      if (isTimeout(err)) {
+        throw new JudgeRequestError(
+          `LeetCode did not answer within ${REQUEST_TIMEOUT_MS / 1000} seconds. Try again in a moment.`,
+        );
+      }
+      throw err;
+    }
 
     if (!response.ok) {
-      const body = (await response.text()).slice(0, 400);
+      const body = text.slice(0, 400);
       log.error(`${request.method} ${url} failed with HTTP ${response.status}`, body);
       if (challenged(response)) {
         throw new JudgeRequestError(CLOUDFLARE_MESSAGE);
@@ -153,7 +164,6 @@ export class JudgeApi {
       throw new JudgeRequestError(`LeetCode replied with HTTP ${response.status}`);
     }
 
-    const text = await response.text();
     try {
       return JSON.parse(text) as unknown;
     } catch {
