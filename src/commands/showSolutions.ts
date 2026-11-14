@@ -7,7 +7,7 @@ import {
   type SolutionSummary,
 } from '../leetcode/solutions';
 import { log } from '../log';
-import { readMetadata } from '../workspace/problemFiles';
+import { activeProblem, reportFailure } from './common';
 
 /** How many of the top solutions to offer. */
 const SOLUTION_COUNT = 20;
@@ -65,19 +65,11 @@ function describe(solution: SolutionSummary): vscode.QuickPickItem & { id: strin
  * beside a solution.
  */
 export async function showSolutions(context: vscode.ExtensionContext, api: Api): Promise<void> {
-  const editor = vscode.window.activeTextEditor;
-  if (editor === undefined) {
-    void vscode.window.showWarningMessage('Open a solution file first.');
+  const active = await activeProblem();
+  if (active === undefined) {
     return;
   }
-
-  const metadata = await readMetadata(editor.document.uri);
-  if (metadata === undefined) {
-    void vscode.window.showWarningMessage(
-      'This file is not inside a problem folder. Open a problem from the sidebar first.',
-    );
-    return;
-  }
+  const { metadata } = active;
 
   const heading = `${metadata.questionFrontendId}. ${metadata.title}`;
 
@@ -116,13 +108,6 @@ export async function showSolutions(context: vscode.ExtensionContext, api: Api):
     await vscode.commands.executeCommand('markdown.showPreviewToSide', file);
     log.info(`Opened solution ${article.id} for ${metadata.titleSlug}`);
   } catch (err) {
-    log.error(`Could not load solutions for ${metadata.titleSlug}`, err);
-    const choice = await vscode.window.showErrorMessage(
-      `Could not load solutions: ${err instanceof Error ? err.message : String(err)}`,
-      'Show Output',
-    );
-    if (choice === 'Show Output') {
-      log.show();
-    }
+    await reportFailure(`Could not load solutions for ${metadata.titleSlug}`, err);
   }
 }

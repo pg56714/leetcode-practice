@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import type { Api } from '../leetcode/api';
 import { extensionFor } from '../leetcode/languages';
 import { log } from '../log';
-import { createProblemFolder, readMetadata } from '../workspace/problemFiles';
+import { createProblemFolder } from '../workspace/problemFiles';
+import { activeProblem, reportFailure } from './common';
 
 /**
  * Switches the language of the problem in front of the reader.
@@ -14,19 +15,11 @@ import { createProblemFolder, readMetadata } from '../workspace/problemFiles';
  * language from whichever file is open rather than from the folder.
  */
 export async function changeLanguage(context: vscode.ExtensionContext, api: Api): Promise<void> {
-  const editor = vscode.window.activeTextEditor;
-  if (editor === undefined) {
-    void vscode.window.showWarningMessage('Open a solution file first.');
+  const active = await activeProblem();
+  if (active === undefined) {
     return;
   }
-
-  const metadata = await readMetadata(editor.document.uri);
-  if (metadata === undefined) {
-    void vscode.window.showWarningMessage(
-      'This file is not inside a problem folder. Open a problem from the sidebar first.',
-    );
-    return;
-  }
+  const { metadata } = active;
 
   try {
     const detail = await vscode.window.withProgress(
@@ -69,13 +62,6 @@ export async function changeLanguage(context: vscode.ExtensionContext, api: Api)
       void vscode.window.showInformationMessage(message);
     }
   } catch (err) {
-    log.error(`Could not switch language for ${metadata.titleSlug}`, err);
-    const choice = await vscode.window.showErrorMessage(
-      `Could not switch language: ${err instanceof Error ? err.message : String(err)}`,
-      'Show Output',
-    );
-    if (choice === 'Show Output') {
-      log.show();
-    }
+    await reportFailure(`Could not switch language for ${metadata.titleSlug}`, err);
   }
 }

@@ -1,7 +1,6 @@
 import { log } from '../log';
+import { credentialHeaders, ORIGIN, REQUEST_TIMEOUT_MS } from './http';
 import type { Session } from './session';
-
-const ORIGIN = 'https://leetcode.com';
 
 /**
  * Fallback User-Agent for the degraded transport.
@@ -27,8 +26,6 @@ interface RestRequest {
 }
 
 type Transport = (url: string, request: RestRequest) => Promise<RestResponse>;
-
-const REQUEST_TIMEOUT_MS = 20_000;
 
 let transport: Transport | undefined;
 
@@ -110,22 +107,19 @@ export class JudgeApi {
    * consistent with the TLS fingerprint it just presented.
    */
   private async headers(slug: string): Promise<Record<string, string>> {
-    const headers: Record<string, string> = {
+    const credentials = await this.session.read();
+    if (credentials === undefined) {
+      throw new JudgeRequestError('Sign in to LeetCode first.');
+    }
+    return {
       'Content-Type': 'application/json',
       Referer: `${ORIGIN}/problems/${encodeURIComponent(slug)}/`,
       Origin: ORIGIN,
       'Sec-Fetch-Dest': 'empty',
       'Sec-Fetch-Mode': 'cors',
       'Sec-Fetch-Site': 'same-origin',
+      ...credentialHeaders(credentials),
     };
-
-    const credentials = await this.session.read();
-    if (credentials === undefined) {
-      throw new JudgeRequestError('Sign in to LeetCode first.');
-    }
-    headers.Cookie = `LEETCODE_SESSION=${credentials.session}; csrftoken=${credentials.csrfToken}`;
-    headers['x-csrftoken'] = credentials.csrfToken;
-    return headers;
   }
 
   private async send(

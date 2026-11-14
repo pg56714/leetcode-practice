@@ -10,7 +10,7 @@ import {
   type StudyPlanGroup,
 } from '../leetcode/lists';
 import type { ProblemSummary } from '../leetcode/types';
-import { log } from '../log';
+import { describeError, log } from '../log';
 import { problemIcon } from '../ui/icons';
 
 /** A row: one of the reader's lists, an official plan, a section, or a problem. */
@@ -87,7 +87,7 @@ export class StudyListsView implements vscode.TreeDataProvider<Node> {
       log.info(`Loaded ${lists.length} lists and ${plans.length} of ${slugs.length} study plans`);
     } catch (err) {
       log.error('Could not load study lists', err);
-      this.failure = err instanceof Error ? err.message : String(err);
+      this.failure = describeError(err);
       this.lists = [];
       this.plans = [];
     }

@@ -4,6 +4,7 @@ import { isKnownLanguage } from '../leetcode/languages';
 import { log } from '../log';
 import type { ProblemPanel } from '../webview/problemPanel';
 import { createProblemFolder } from '../workspace/problemFiles';
+import { reportFailure } from './common';
 
 const FALLBACK_LANGUAGE = 'python3';
 
@@ -56,13 +57,6 @@ export async function openProblem(
       `${opened.created ? 'Created' : 'Reopened'} ${opened.folder.fsPath} (${opened.langSlug})`,
     );
   } catch (err) {
-    log.error(`Could not open ${slug}`, err);
-    const choice = await vscode.window.showErrorMessage(
-      `Could not open ${slug}: ${err instanceof Error ? err.message : String(err)}`,
-      'Show Output',
-    );
-    if (choice === 'Show Output') {
-      log.show();
-    }
+    await reportFailure(`Could not open ${slug}`, err);
   }
 }

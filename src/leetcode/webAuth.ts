@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { type AuthContext, applyCookieString } from '../commands/signIn';
 import { log } from '../log';
-import { ORIGIN } from './api';
+import { ORIGIN } from './http';
 
 /**
  * How long a started authorisation stays open.

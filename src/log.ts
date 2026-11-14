@@ -17,6 +17,11 @@ function stamp(): string {
   return new Date().toISOString().slice(11, 19);
 }
 
+/** Reduces anything a catch block can receive — Error, string, other — to one line. */
+export function describeError(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
 export const log = {
   info(message: string): void {
     out().appendLine(`${stamp()}  ${message}`);
@@ -43,8 +48,7 @@ ${JSON.stringify(payload, null, 2)}`;
    * or some unknown thrown value — and is reduced to a single readable line.
    */
   error(message: string, detail?: unknown): void {
-    const suffix =
-      detail === undefined ? '' : `: ${detail instanceof Error ? detail.message : String(detail)}`;
+    const suffix = detail === undefined ? '' : `: ${describeError(detail)}`;
     out().appendLine(`${stamp()}  ERROR ${message}${suffix}`);
   },
 

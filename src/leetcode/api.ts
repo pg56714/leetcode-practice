@@ -1,4 +1,5 @@
 import { log } from '../log';
+import { credentialHeaders, ORIGIN } from './http';
 import { DAILY_CHALLENGE, PROBLEM_PAGE, QUESTION_DETAIL, USER_STATUS } from './queries';
 import type { Session } from './session';
 import type {
@@ -9,8 +10,6 @@ import type {
   ProblemSummary,
   UserStatus,
 } from './types';
-
-export const ORIGIN = 'https://leetcode.com';
 
 /** LeetCode's hard ceiling on rows per problem-set page, whatever `limit` asks. */
 export const PAGE_SIZE = 100;
@@ -59,8 +58,7 @@ export class Api {
 
     const credentials = await this.session.read();
     if (credentials) {
-      headers.Cookie = `LEETCODE_SESSION=${credentials.session}; csrftoken=${credentials.csrfToken}`;
-      headers['x-csrftoken'] = credentials.csrfToken;
+      Object.assign(headers, credentialHeaders(credentials));
     }
 
     const response = await fetch(`${ORIGIN}/graphql/`, {

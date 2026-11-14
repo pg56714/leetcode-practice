@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import type { Api } from '../leetcode/api';
+import { ORIGIN } from '../leetcode/http';
 import {
   type Contest,
   type ContestQuestion,
@@ -7,7 +8,7 @@ import {
   fetchPastContests,
   fetchUpcomingContests,
 } from '../leetcode/lists';
-import { log } from '../log';
+import { describeError, log } from '../log';
 
 /** How many finished contests to list. */
 const PAST_COUNT = 12;
@@ -75,7 +76,7 @@ export class ContestsView implements vscode.TreeDataProvider<Node> {
       log.info(`Loaded ${upcoming.length} upcoming and ${past.length} past contests`);
     } catch (err) {
       log.error('Could not load contests', err);
-      this.failure = err instanceof Error ? err.message : String(err);
+      this.failure = describeError(err);
       this.contests = [];
     }
     this.changed.fire();
@@ -136,7 +137,7 @@ export class ContestsView implements vscode.TreeDataProvider<Node> {
       item.command = {
         command: 'vscode.open',
         title: 'Open contest',
-        arguments: [vscode.Uri.parse(`https://leetcode.com/contest/${contest.slug}/`)],
+        arguments: [vscode.Uri.parse(`${ORIGIN}/contest/${contest.slug}/`)],
       };
     }
     return item;

@@ -4,8 +4,8 @@ import type { ProblemDetail } from '../leetcode/types';
 import { log } from '../log';
 import { completeTemplate } from './templates';
 
-/** What a problem folder holds, and what phase 4 needs to submit from it. */
-interface ProblemMetadata {
+/** What a problem folder holds, and what is needed to submit from it. */
+export interface ProblemMetadata {
   /** Internal id. The interpret and submit endpoints want this one. */
   questionId: string;
   /** The website's number, which also names the folder. */

@@ -2,9 +2,10 @@ import * as vscode from 'vscode';
 import { isSettled, readResult } from '../leetcode/judge';
 import { languageForExtension } from '../leetcode/languages';
 import type { JudgeApi } from '../leetcode/rest';
-import { log } from '../log';
+import { describeError, log } from '../log';
 import type { ResultView } from '../webview/resultView';
-import { readMetadata, readTestCases } from '../workspace/problemFiles';
+import { readTestCases } from '../workspace/problemFiles';
+import { activeProblem, reportFailure } from './common';
 
 /** How long to wait between polls, and how long to keep waiting overall. */
 const POLL_INTERVAL_MS = 1200;
@@ -70,20 +71,12 @@ export async function runSolution(
   panel: ResultView,
   mode: 'test' | 'submit',
 ): Promise<void> {
-  const editor = vscode.window.activeTextEditor;
-  if (editor === undefined) {
-    void vscode.window.showWarningMessage('Open a solution file first.');
+  const active = await activeProblem();
+  if (active === undefined) {
     return;
   }
-
+  const { editor, metadata } = active;
   const file = editor.document.uri;
-  const metadata = await readMetadata(file);
-  if (metadata === undefined) {
-    void vscode.window.showWarningMessage(
-      'This file is not inside a problem folder. Open a problem from the sidebar first.',
-    );
-    return;
-  }
 
   // Checked before anything is rendered: judging without credentials fails at
   // the first header, and an offer to sign in is more use than that error.
@@ -149,13 +142,7 @@ export async function runSolution(
       },
     );
   } catch (err) {
-    log.error(`${mode === 'test' ? 'Test' : 'Submission'} failed`, err);
-    const message = err instanceof Error ? err.message : String(err);
-    panel.failed(heading, message);
-
-    const choice = await vscode.window.showErrorMessage(message, 'Show Output');
-    if (choice === 'Show Output') {
-      log.show();
-    }
+    panel.failed(heading, describeError(err));
+    await reportFailure(`${mode === 'test' ? 'Test' : 'Submission'} failed`, err);
   }
 }

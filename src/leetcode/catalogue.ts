@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { log } from '../log';
+import { describeError, log } from '../log';
 import { type Api, PAGE_SIZE } from './api';
 import type { ProblemSummary } from './types';
 
@@ -134,7 +134,7 @@ export class Catalogue {
       log.error('Could not fetch the problem set', err);
       if (!silent) {
         void vscode.window.showErrorMessage(
-          `Could not fetch the problem set: ${err instanceof Error ? err.message : String(err)}`,
+          `Could not fetch the problem set: ${describeError(err)}`,
         );
       }
       // Keep whatever was already loaded; a failed refresh should not empty the view.

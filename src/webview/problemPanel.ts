@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import xss from 'xss';
 import type { ProblemDetail } from '../leetcode/types';
+import { escapeHtml } from './html';
 
 /**
  * Tags and attributes kept when sanitising a problem statement.
@@ -79,15 +80,6 @@ export class ProblemPanel {
     this.panel?.dispose();
     this.panel = undefined;
   }
-}
-
-/** Escapes text destined for an HTML context. */
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
 
 const DIFFICULTY_VAR: Record<string, string> = {

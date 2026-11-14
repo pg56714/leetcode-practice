@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import type { Api } from '../leetcode/api';
 import type { DailyChallenge } from '../leetcode/types';
-import { log } from '../log';
+import { describeError, log } from '../log';
 import { problemIcon } from '../ui/icons';
 
 /**
@@ -33,7 +33,7 @@ export class DailyChallengeView implements vscode.TreeDataProvider<vscode.TreeIt
       this.state = { kind: 'ready', daily: await this.api.dailyChallenge() };
     } catch (err) {
       log.error('Could not load the daily challenge', err);
-      this.state = { kind: 'failed', reason: err instanceof Error ? err.message : String(err) };
+      this.state = { kind: 'failed', reason: describeError(err) };
     }
     this.changed.fire();
   }

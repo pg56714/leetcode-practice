@@ -1,14 +1,6 @@
 import * as vscode from 'vscode';
 import type { JudgeResult } from '../leetcode/judge';
-
-/** Escapes text destined for an HTML context. */
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+import { escapeHtml } from './html';
 
 function block(title: string, body: string): string {
   return `<section><h2>${escapeHtml(title)}</h2>${body}</section>`;

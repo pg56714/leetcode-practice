@@ -4,7 +4,7 @@ import type { Catalogue } from '../leetcode/catalogue';
 import { extensionFor, SUPPORTED_LANGUAGES } from '../leetcode/languages';
 import { log } from '../log';
 import type { ProblemPanel } from '../webview/problemPanel';
-import { readMetadata } from '../workspace/problemFiles';
+import { activeProblem, reportFailure } from './common';
 
 /**
  * Reopens the statement for the problem in front of the reader.
@@ -14,17 +14,11 @@ import { readMetadata } from '../workspace/problemFiles';
  * thing to have to do while halfway through solving it.
  */
 export async function showStatement(api: Api, panel: ProblemPanel): Promise<void> {
-  const editor = vscode.window.activeTextEditor;
-  if (editor === undefined) {
-    void vscode.window.showWarningMessage('Open a solution file first.');
+  const active = await activeProblem();
+  if (active === undefined) {
     return;
   }
-
-  const metadata = await readMetadata(editor.document.uri);
-  if (metadata === undefined) {
-    void vscode.window.showWarningMessage('This file is not inside a problem folder.');
-    return;
-  }
+  const { metadata } = active;
 
   try {
     const detail = await vscode.window.withProgress(
@@ -33,10 +27,7 @@ export async function showStatement(api: Api, panel: ProblemPanel): Promise<void
     );
     panel.show(detail);
   } catch (err) {
-    log.error(`Could not load the statement for ${metadata.titleSlug}`, err);
-    void vscode.window.showErrorMessage(
-      `Could not load the statement: ${err instanceof Error ? err.message : String(err)}`,
-    );
+    await reportFailure(`Could not load the statement for ${metadata.titleSlug}`, err);
   }
 }
 
