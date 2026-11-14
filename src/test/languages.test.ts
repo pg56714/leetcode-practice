@@ -16,6 +16,12 @@ describe('extensionFor', () => {
     expect(extensionFor('postgresql')).toBe('sql');
   });
 
+  test('gives Bash and Pandas files the extension their editors expect', () => {
+    // Both used to land in main.txt, with no syntax highlighting at all.
+    expect(extensionFor('bash')).toBe('sh');
+    expect(extensionFor('pythondata')).toBe('py');
+  });
+
   test('falls back to txt rather than producing a file with no extension', () => {
     expect(extensionFor('brainfuck')).toBe('txt');
   });
@@ -61,6 +67,19 @@ describe('languageForExtension', () => {
   test('python and python3 are told apart by the metadata, not the extension', () => {
     expect(languageForExtension('C:/x/1-two-sum/main.py', 'python')).toBe('python');
     expect(languageForExtension('C:/x/1-two-sum/main.py', 'python3')).toBe('python3');
+  });
+
+  test('an unrecorded main.py is still guessed as python3, not Pandas', () => {
+    // Pandas shares .py, but folders from before files were recorded never
+    // held a Pandas main.py, so the old guess must not change under them.
+    expect(languageForExtension('C:/x/1-two-sum/main.py', 'rust')).toBe('python3');
+    expect(languageForExtension('C:/x/175-combine-two-tables/main.py', 'pythondata')).toBe(
+      'pythondata',
+    );
+  });
+
+  test('a .sh file submits as Bash', () => {
+    expect(languageForExtension('C:/x/192-word-frequency/main.sh', 'python3')).toBe('bash');
   });
 
   test('a file with no extension leaves the metadata alone', () => {

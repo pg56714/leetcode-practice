@@ -2,12 +2,16 @@
  * LeetCode language slugs and the file extension each one gets.
  *
  * The slug is what the submit API expects; the extension is what makes the
- * editor pick the right grammar. SQL dialects all share `.sql`, which is why
- * this cannot be a symmetric lookup.
+ * editor pick the right grammar. SQL dialects all share `.sql`, and Python 2,
+ * Python 3 and Pandas (`pythondata`) share `.py`, which is why this cannot be a
+ * symmetric lookup. Order matters where extensions are shared: the first slug
+ * listed is the guess for a file whose language was never recorded.
  */
 const EXTENSION_BY_SLUG: Record<string, string> = {
   python3: 'py',
   python: 'py',
+  // Database problems offer Pandas beside the SQL dialects, never python3.
+  pythondata: 'py',
   cpp: 'cpp',
   c: 'c',
   java: 'java',
@@ -29,6 +33,8 @@ const EXTENSION_BY_SLUG: Record<string, string> = {
   mssql: 'sql',
   oraclesql: 'sql',
   postgresql: 'sql',
+  // The shell problems offer nothing else.
+  bash: 'sh',
 };
 
 /** Every language slug this extension knows how to name a file for. */

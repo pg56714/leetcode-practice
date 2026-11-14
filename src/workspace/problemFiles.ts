@@ -19,8 +19,8 @@ export interface ProblemMetadata {
    * The language each solution file was written in, by file name.
    *
    * The extension cannot say it alone: four SQL dialects share main.sql, and
-   * python and python3 share main.py. Folders written by older versions lack
-   * it, and their files fall back to the extension.
+   * python, python3 and Pandas share main.py. Folders written by older
+   * versions lack it, and their files fall back to the extension.
    */
   files?: Record<string, string>;
   /** Lines one test case occupies, so test input can be split later. */

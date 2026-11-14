@@ -216,6 +216,20 @@ describe('createProblemFolder', () => {
     expect(fs.read(`${sqlFolder}/main.sql`)).toBe('SELECT 1;\n');
   });
 
+  test('a Pandas main.py beside main.sql is not mistaken for python3', async () => {
+    const withPandas = problem('175', 'combine-two-tables', ['mysql', 'postgresql', 'pythondata']);
+    await createProblemFolder(context, withPandas, 'postgresql', { explicit: true });
+    await createProblemFolder(context, withPandas, 'pythondata', { explicit: true });
+
+    // The extension alone would say python3, which this problem does not offer.
+    const metadata = metadataIn(sqlFolder);
+    expect(fileLanguage(metadata, 'main.py')).toBe('pythondata');
+    expect(fileLanguage(metadata, 'main.sql')).toBe('postgresql');
+
+    const reopened = await createProblemFolder(context, withPandas, 'python3');
+    expect(reopened.langSlug).toBe('pythondata');
+  });
+
   test('the first open of a database problem takes the first dialect listed', async () => {
     const opened = await createProblemFolder(context, sql, 'python3');
     expect(opened.created).toBe(true);
