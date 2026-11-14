@@ -289,7 +289,7 @@
   "packageManager": "bun@1.3.14",
   "scripts": {
     "compile": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:impit --format=cjs --platform=node --sourcemap && node scripts/copy-native-deps.mjs",
-    "watch": "bun run compile -- --watch",
+    "watch": "node scripts/copy-native-deps.mjs && esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:impit --format=cjs --platform=node --sourcemap --watch",
     "package": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --external:impit --format=cjs --platform=node --minify && node scripts/copy-native-deps.mjs",
     "vscode:prepublish": "bun run package",
     "typecheck": "tsc --noEmit -p tsconfig.json",
