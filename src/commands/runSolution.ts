@@ -58,14 +58,41 @@ async function pollUntilDone(
   throw new Error('LeetCode is still judging after a minute; check the site directly');
 }
 
+/** Set while a run is in progress, from its first prompt to its result. */
+let judging = false;
+
 /**
  * Runs the active solution file, either as a test or as a real submission.
+ *
+ * One run at a time. A second run straight after the first is enough for
+ * LeetCode to answer 429, and two results racing into one panel would show
+ * whichever happened to land last.
+ */
+export async function runSolution(
+  judge: JudgeApi,
+  panel: ResultView,
+  mode: 'test' | 'submit',
+): Promise<void> {
+  if (judging) {
+    void vscode.window.showInformationMessage('LeetCode is still judging the previous run.');
+    return;
+  }
+  judging = true;
+  try {
+    await judgeActiveFile(judge, panel, mode);
+  } finally {
+    judging = false;
+  }
+}
+
+/**
+ * The run itself.
  *
  * The language is the one recorded for this file rather than the folder's: a
  * problem can hold main.py and main.rs at once, and the one being submitted is
  * the one in front of the reader.
  */
-export async function runSolution(
+async function judgeActiveFile(
   judge: JudgeApi,
   panel: ResultView,
   mode: 'test' | 'submit',
