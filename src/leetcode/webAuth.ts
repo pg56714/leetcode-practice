@@ -37,7 +37,10 @@ async function offerCookieInstead(message: string): Promise<void> {
  * checks any link could hand the extension somebody else's session.
  */
 export class WebAuth implements vscode.UriHandler {
+  /** When the browser was last handed an authorisation page. */
   private pendingSince: number | undefined;
+  /** The hand-off to the browser in progress, which a second click joins. */
+  private opening: Promise<void> | undefined;
 
   constructor(
     private readonly extensionId: string,
@@ -48,23 +51,39 @@ export class WebAuth implements vscode.UriHandler {
     return this.pendingSince !== undefined && Date.now() - this.pendingSince < PENDING_TIMEOUT_MS;
   }
 
-  /** Opens LeetCode's authorisation page in the browser. */
-  async start(): Promise<void> {
+  /**
+   * Opens LeetCode's authorisation page in the browser.
+   *
+   * A double click on the status bar arrives here twice. It used to open two
+   * pages behind two "open this website?" prompts, and cancelling either
+   * prompt cleared the pending state the other relied on, so the session that
+   * did come back was ignored. A second call now joins the first.
+   */
+  start(): Promise<void> {
+    this.opening ??= this.open().finally(() => {
+      this.opening = undefined;
+    });
+    return this.opening;
+  }
+
+  private async open(): Promise<void> {
     const scheme = vscode.env.uriScheme;
     const target = vscode.Uri.parse(
       `${ORIGIN}/authorize-login/${encodeURIComponent(scheme)}/?path=${encodeURIComponent(this.extensionId)}`,
     );
-
-    this.pendingSince = Date.now();
     log.info(`Started web authorisation for ${scheme}://${this.extensionId}`);
 
     const opened = await vscode.env.openExternal(target);
     if (!opened) {
-      this.pendingSince = undefined;
+      // Only this attempt failed. A page opened earlier may still be about to
+      // answer, so its window is left as it was.
       await offerCookieInstead('Could not open the browser for authorisation.');
       return;
     }
 
+    // Armed once the page is open, not before: no answer can come back
+    // before the browser has it, and a cancelled prompt never arms anything.
+    this.pendingSince = Date.now();
     void vscode.window.showInformationMessage(
       'Authorise in the browser; VS Code will pick up the session automatically.',
     );

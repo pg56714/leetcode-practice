@@ -47,6 +47,14 @@ mock.module('vscode', () => ({
       show: () => undefined,
       dispose: () => undefined,
     }),
+    // Notifications nobody answers, as when the reader dismisses them.
+    showInformationMessage: async () => undefined,
+    showWarningMessage: async () => undefined,
+    showErrorMessage: async () => undefined,
+  },
+  env: {
+    uriScheme: 'vscode',
+    openExternal: notStubbed,
   },
   Uri: {
     // Resolves ".." the way the real joinPath does, which is how a solution

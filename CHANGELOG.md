@@ -40,6 +40,9 @@ All notable changes to this extension are recorded here, following
 - Signing in while the problem list or study lists were still loading left them
   showing signed-out progress, the problem list for a week.
 - Signing in or out in another window went unnoticed until a reload.
+- Double-clicking Sign In could leave the sign-in ignored: it opened two
+  browser prompts, and cancelling either voided both. A second click now joins
+  the first.
 - One failed page threw away the whole problem-set fetch; pages are now retried.
 - Notes and other non-solution files in a problem folder offered Test and Submit.
 - The Problems view said "No problems cached yet" while the cache was loading
