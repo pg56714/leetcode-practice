@@ -274,8 +274,8 @@
     "keybindings": [
       {
         "command": "leetcodePractice.testSolution",
-        "key": "ctrl+;",
-        "mac": "cmd+;",
+        "key": "ctrl+shift+enter",
+        "mac": "cmd+shift+enter",
         "when": "editorTextFocus && leetcodePractice.isSolution"
       },
       {

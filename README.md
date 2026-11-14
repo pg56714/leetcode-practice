@@ -129,9 +129,11 @@ records the new dialect for it.
 
 ### Testing and submitting
 
-With a solution file open, `Ctrl+;` runs it against the cases in
+With a solution file open, `Ctrl+Shift+Enter` runs it against the cases in
 `testcases.txt` and `Ctrl+Enter` submits it; both also sit as buttons in the
-editor title bar. Results appear in the **LeetCode Results** panel at the
+editor title bar. Neither shortcut uses a punctuation key, because input
+methods such as Microsoft Bopomofo turn Ctrl plus punctuation into full-width
+symbols before VS Code sees the keys. Results appear in the **LeetCode Results** panel at the
 bottom, alongside Terminal and Output: verdict, timing, each case next to its
 expected output, and compile or runtime errors when there are any. Each case is
 marked by the judge's own per-case verdict rather than by comparing the printed

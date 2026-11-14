@@ -14,6 +14,9 @@ All notable changes to this extension are recorded here, following
 
 ### Changed
 
+- **Test is now `Ctrl+Shift+Enter`** (`Cmd+Shift+Enter` on macOS), replacing
+  `Ctrl+;`. Input methods such as Microsoft Bopomofo turn Ctrl plus punctuation
+  into a full-width symbol, so `Ctrl+;` typed "；" instead of running the test.
 - Problem statements and templates are kept for the session, so Show
   Statement and Change Language no longer refetch them.
 - The cached problem list appears without waiting for the sign-in check.
