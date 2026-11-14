@@ -12,6 +12,11 @@ export const ORIGIN = 'https://leetcode.com';
  */
 export const REQUEST_TIMEOUT_MS = 20_000;
 
+/** Resolves after `ms` milliseconds, for pacing polls and retries. */
+export function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
  * Whether a request failed by running out of time.
  *

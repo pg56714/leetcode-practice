@@ -32,7 +32,7 @@ interface QuestionNode {
 }
 
 /** One page of the problem set. */
-interface ProblemPage {
+export interface ProblemPage {
   total: number;
   problems: ProblemSummary[];
 }

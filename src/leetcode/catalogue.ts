@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { describeError, log } from '../log';
-import { type Api, PAGE_SIZE } from './api';
+import { type Api, PAGE_SIZE, type ProblemPage } from './api';
+import { wait } from './http';
 import type { ProblemSummary } from './types';
 
 /** Bump when the cached shape changes, so old files are discarded not misread. */
@@ -12,6 +13,18 @@ const STALE_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 
 /** How many pages are in flight at once while fetching the whole set. */
 const CONCURRENCY = 5;
+
+/** How many times one page is tried before the whole fetch gives up. */
+const PAGE_ATTEMPTS = 3;
+/** Pause before trying a page again, multiplied by the attempt number. */
+const RETRY_DELAY_MS = 1000;
+
+type FetchProgress = vscode.Progress<{ message?: string; increment?: number }>;
+
+export interface CatalogueOptions {
+  /** Overrides RETRY_DELAY_MS, which tests have no reason to sit through. */
+  retryDelayMs?: number;
+}
 
 interface CacheFile {
   version: number;
@@ -40,6 +53,7 @@ export class Catalogue {
   constructor(
     private readonly api: Api,
     private readonly storageDir: vscode.Uri,
+    private readonly options: CatalogueOptions = {},
   ) {}
 
   get size(): number {
@@ -100,46 +114,13 @@ export class Catalogue {
   }
 
   private async fetchAll(silent: boolean): Promise<void> {
-    const run = async (progress?: vscode.Progress<{ message?: string; increment?: number }>) => {
-      const first = await this.api.problemPage(0);
-      const total = first.total;
-      const collected = [...first.problems];
-      const pages: number[] = [];
-      for (let skip = PAGE_SIZE; skip < total; skip += PAGE_SIZE) {
-        pages.push(skip);
-      }
-
-      progress?.report({ message: `${collected.length} / ${total}` });
-
-      // Batched rather than all at once: 40 simultaneous requests is a good way
-      // to get rate limited, and sequential would take far too long.
-      for (let i = 0; i < pages.length; i += CONCURRENCY) {
-        const batch = pages.slice(i, i + CONCURRENCY);
-        const results = await Promise.all(batch.map((skip) => this.api.problemPage(skip)));
-        for (const page of results) {
-          collected.push(...page.problems);
-        }
-        progress?.report({
-          message: `${collected.length} / ${total}`,
-          increment: (batch.length / (pages.length + 1)) * 100,
-        });
-      }
-
-      collected.sort((a, b) => Number(a.number) - Number(b.number));
-      this.problems = collected;
-      this.fetchedAt = new Date();
-      await this.writeCache();
-      this.changed.fire();
-      log.info(`Fetched ${collected.length} of ${total} problems`);
-    };
-
     try {
       if (silent) {
-        await run();
+        await this.fetchPages();
       } else {
         await vscode.window.withProgress(
           { location: vscode.ProgressLocation.Notification, title: 'Fetching LeetCode problems' },
-          (progress) => run(progress),
+          (progress) => this.fetchPages(progress),
         );
       }
     } catch (err) {
@@ -151,6 +132,70 @@ export class Catalogue {
       }
       // Keep whatever was already loaded; a failed refresh should not empty the view.
       this.changed.fire();
+    }
+  }
+
+  private async fetchPages(progress?: FetchProgress): Promise<void> {
+    const first = await this.page(0);
+    const total = first.total;
+    const collected = [...first.problems];
+    const skips: number[] = [];
+    for (let skip = PAGE_SIZE; skip < total; skip += PAGE_SIZE) {
+      skips.push(skip);
+    }
+    const step = 100 / (skips.length + 1);
+    progress?.report({ message: `${collected.length} / ${total}`, increment: step });
+
+    // Five at a time, as a pool rather than in batches: a batch waits for its
+    // slowest page before the next batch starts, where a pool starts the next
+    // page as soon as any finishes. All forty at once would invite a 429.
+    let next = 0;
+    let failed = false;
+    const worker = async (): Promise<void> => {
+      while (!failed) {
+        const skip = skips[next++];
+        if (skip === undefined) {
+          return;
+        }
+        try {
+          const page = await this.page(skip);
+          collected.push(...page.problems);
+          progress?.report({ message: `${collected.length} / ${total}`, increment: step });
+        } catch (err) {
+          // The other workers finish the page they hold, then stop.
+          failed = true;
+          throw err;
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, skips.length) }, worker));
+
+    collected.sort((a, b) => Number(a.number) - Number(b.number));
+    this.problems = collected;
+    this.fetchedAt = new Date();
+    await this.writeCache();
+    this.changed.fire();
+    log.info(`Fetched ${collected.length} of ${total} problems`);
+  }
+
+  /**
+   * One page, tried again before giving up.
+   *
+   * Forty-one requests leave plenty of room for one to fail in passing, and
+   * without a retry that one failure threw away the forty that worked.
+   */
+  private async page(skip: number): Promise<ProblemPage> {
+    const delay = this.options.retryDelayMs ?? RETRY_DELAY_MS;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await this.api.problemPage(skip);
+      } catch (err) {
+        if (attempt >= PAGE_ATTEMPTS) {
+          throw err;
+        }
+        log.info(`Problem page at ${skip} failed (${describeError(err)}); trying again`);
+        await wait(delay * attempt);
+      }
     }
   }
 

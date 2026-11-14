@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { wait } from '../leetcode/http';
 import { isSettled, readResult } from '../leetcode/judge';
 import type { JudgeApi } from '../leetcode/rest';
 import { describeError, log } from '../log';
@@ -9,10 +10,6 @@ import { activeProblem, reportFailure } from './common';
 /** How long to wait between polls, and how long to keep waiting overall. */
 const POLL_INTERVAL_MS = 1200;
 const POLL_TIMEOUT_MS = 60_000;
-
-function wait(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 /**
  * Splits test input into cases so results can be shown next to their input.
