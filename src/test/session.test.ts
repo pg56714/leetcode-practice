@@ -1,8 +1,64 @@
 import { describe, expect, test } from 'bun:test';
+import type * as vscode from 'vscode';
 import { Session } from '../leetcode/session';
 
 const SESSION = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.payload.signature';
 const CSRF = '8kZQ2nR7abcdef';
+
+/** Secret storage as VS Code gives it: one store, shared by every window. */
+function sharedSecrets(): vscode.SecretStorage {
+  const store = new Map<string, string>();
+  return {
+    get: async (key: string) => store.get(key),
+    store: async (key: string, value: string) => {
+      store.set(key, value);
+    },
+    delete: async (key: string) => {
+      store.delete(key);
+    },
+  } as unknown as vscode.SecretStorage;
+}
+
+/**
+ * Each window caches the credentials it read, so without rereading, signing in
+ * in one window left another signed out until it reloaded, and signing out
+ * left the other still judging as the account that had left.
+ */
+describe('Session.reload', () => {
+  test('notices a sign-in made in another window', async () => {
+    const secrets = sharedSecrets();
+    const here = new Session(secrets);
+    const elsewhere = new Session(secrets);
+    expect(await here.read()).toBeUndefined();
+
+    await elsewhere.write({ session: SESSION, csrfToken: CSRF });
+
+    expect(await here.reload()).toBe(true);
+    expect(await here.read()).toEqual({ session: SESSION, csrfToken: CSRF });
+  });
+
+  test('notices a sign-out made in another window', async () => {
+    const secrets = sharedSecrets();
+    const here = new Session(secrets);
+    const elsewhere = new Session(secrets);
+    await here.write({ session: SESSION, csrfToken: CSRF });
+
+    await elsewhere.clear();
+
+    expect(await here.reload()).toBe(true);
+    expect(await here.read()).toBeUndefined();
+  });
+
+  test("does not count this window's own changes", async () => {
+    const here = new Session(sharedSecrets());
+
+    await here.write({ session: SESSION, csrfToken: CSRF });
+    expect(await here.reload()).toBe(false);
+
+    await here.clear();
+    expect(await here.reload()).toBe(false);
+  });
+});
 
 /**
  * What people actually paste.

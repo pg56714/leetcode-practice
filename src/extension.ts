@@ -13,7 +13,7 @@ import {
 import { Api } from './leetcode/api';
 import { Catalogue } from './leetcode/catalogue';
 import { JudgeApi } from './leetcode/rest';
-import { Session } from './leetcode/session';
+import { SECRET_KEY, Session } from './leetcode/session';
 import { WebAuth } from './leetcode/webAuth';
 import { log } from './log';
 import { StatusBar } from './ui/statusBar';
@@ -87,6 +87,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.window.registerTreeDataProvider('leetcodePractice.studyLists', studyLists),
     vscode.window.registerTreeDataProvider('leetcodePractice.contests', contests),
     vscode.window.onDidChangeActiveTextEditor((editor) => void trackSolutionContext(editor)),
+    // Secret storage is shared between windows, so a sign-in or sign-out in
+    // another one arrives here as a change this window did not make.
+    context.secrets.onDidChange(async (event) => {
+      if (event.key === SECRET_KEY && (await session.reload())) {
+        log.info('The signed-in account changed in another window');
+        await publishStatus(api, statusBar);
+        auth.onAccountChanged();
+      }
+    }),
     vscode.commands.registerCommand('leetcodePractice.signIn', () => webAuth.start()),
     vscode.commands.registerCommand('leetcodePractice.signInWithCookie', () =>
       signInWithPastedCookie(auth),

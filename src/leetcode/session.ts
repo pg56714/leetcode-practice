@@ -1,7 +1,8 @@
 import type * as vscode from 'vscode';
 import type { Credentials } from './types';
 
-const SECRET_KEY = 'leetcodePractice.credentials';
+/** Where the credentials live in secret storage. */
+export const SECRET_KEY = 'leetcodePractice.credentials';
 
 /**
  * Holds the LeetCode credentials and keeps them in VS Code's secret storage.
@@ -41,6 +42,23 @@ export class Session {
   async clear(): Promise<void> {
     this.cached = undefined;
     await this.secrets.delete(SECRET_KEY);
+  }
+
+  /**
+   * Rereads secret storage after it changed, possibly in another window.
+   *
+   * Every window shares secret storage but caches what it read. A sign-in
+   * elsewhere would otherwise leave this window signed out until it reloads,
+   * and a sign-out elsewhere would leave it judging as the account that left.
+   *
+   * @returns True when the stored credentials differ from the ones this window
+   *   was using. Its own writes already match, so they come back false.
+   */
+  async reload(): Promise<boolean> {
+    const before = this.cached;
+    this.cached = undefined;
+    const after = await this.read();
+    return before?.session !== after?.session || before?.csrfToken !== after?.csrfToken;
   }
 
   /**
