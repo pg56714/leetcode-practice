@@ -19,15 +19,14 @@ All notable changes to this extension are recorded here, following
 - The cached problem list appears without waiting for the sign-in check.
 - An empty `studyPlans` setting now hides the official plans instead of
   restoring the defaults, and editing the setting refreshes the view.
-- Cases in the results table are marked by the judge's per-case verdict
-  (`compare_result`) instead of comparing the printed answer with the expected
-  one.
 
 ### Fixed
 
 - Reopening a database problem switched its `main.sql` back to MySQL, so the
   next submission sent, say, PostgreSQL as MySQL. Each solution file now records
   the language it was written in, and only Change Language changes it.
+- The case table marked a correct answer as failed when it came in another
+  order, as two-sum's pair may; cases now follow the judge's per-case verdict.
 - Bash and Pandas solutions get `main.sh` and `main.py` instead of `main.txt`.
 - Requests to LeetCode's GraphQL endpoint give up after 20 seconds instead of
   hanging.

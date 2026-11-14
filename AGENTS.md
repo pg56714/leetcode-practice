@@ -92,11 +92,11 @@ Found by probing. None of it appears in any official documentation:
   carry one trailing empty entry beyond the number of cases
 - `compare_result` is a string with one character per case, "1" where the case
   passed: "11" and "00" on two-case test runs, with no trailing extra. A
-  two-sum submission carries 65 characters, one per hidden test. Case marks are
-  read from it rather than from comparing printed answers, which would fail an
-  answer given in another order. Whether it marks such an answer "1" is what
-  `scripts/probe-judge-shapes.mjs` case 6 records; no fixture holds that run
-  yet
+  two-sum submission carries 65 characters, one per hidden test. **It follows
+  the judge's checker, not the printed text**: a two-sum test run with every
+  pair reversed came back "111" with `correct_answer: true` (fixture
+  `test-other-order`), so case marks are read from it rather than from
+  comparing answers
 - Python syntax errors come back as `Runtime Error` with `full_runtime_error`,
   not as a compile error
 - `code_output` is an array on a test run and a string on a submission;

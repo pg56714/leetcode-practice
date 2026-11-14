@@ -135,7 +135,8 @@ editor title bar. Results appear in the **LeetCode Results** panel at the
 bottom, alongside Terminal and Output: verdict, timing, each case next to its
 expected output, and compile or runtime errors when there are any. Each case is
 marked by the judge's own per-case verdict rather than by comparing the printed
-answer with the expected one. They sit there rather than in an editor tab because
+answer with the expected one, so an answer in another order passes wherever the
+problem accepts it. They sit there rather than in an editor tab because
 a result is something to glance at while the code stays on screen. A submission
 asks for confirmation first, since it is recorded against the account.
 
