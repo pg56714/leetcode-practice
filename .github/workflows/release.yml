@@ -5,10 +5,38 @@ on:
     tags: ['v*']
   workflow_dispatch:
 
-# impit is a native module whose binary lives in a per-platform package, so a
-# VSIX only works on the platform it was built on. Each runner builds its own.
+# Jobs get only what they declare below.
+permissions:
+  contents: read
+
+env:
+  # One vsce for packaging and for publishing, so what is published was
+  # packaged by the same version that publishes it.
+  VSCE: '@vscode/vsce@4.1.0'
+
 jobs:
+  # The Marketplace reads the version from package.json, never the tag, and
+  # --skip-duplicate turns republishing an old version into a silent no-op. A
+  # tag that disagrees with package.json therefore fails here, before anything
+  # is built. A manual run from a branch has no tag to compare.
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Tag matches package.json
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          expected="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$expected" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json, which says $expected. Bump the version before tagging."
+            exit 1
+          fi
+
+  # impit is a native module whose binary lives in a per-platform package, so a
+  # VSIX only works on the platform it was built on. Each runner builds its own.
   package:
+    needs: version
     strategy:
       fail-fast: false
       matrix:
@@ -26,9 +54,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: oven-sh/setup-bun@v2
+      # Pinned to a commit: this job builds what gets published, and a moved
+      # tag would run somebody else's code inside it.
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: latest
+          bun-version-file: package.json
 
       - run: bun install --frozen-lockfile
 
@@ -41,34 +71,46 @@ jobs:
       # npm-based dependency walk cannot run. The build step copies impit into
       # dist/node_modules, which ships either way.
       - name: Package
-        run: bunx @vscode/vsce package --no-dependencies --target ${{ matrix.target }}
+        run: bunx ${{ env.VSCE }} package --no-dependencies --target ${{ matrix.target }}
 
       - uses: actions/upload-artifact@v6
         with:
           name: vsix-${{ matrix.target }}
           path: '*.vsix'
 
-  release:
+  # A manual run from a branch republishes to the Marketplace only; a GitHub
+  # release needs a tag to hang off.
+  github-release:
     needs: package
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      # Marketplace Trusted Publishing: vsce trades the GitHub OIDC token for a
-      # short-lived Marketplace credential, so no PAT is stored as a secret.
-      id-token: write
     steps:
       - uses: actions/download-artifact@v7
         with:
           path: artifacts
           merge-multiple: true
 
-      # A manual run from a branch republishes to the Marketplace only; a GitHub
-      # release needs a tag to hang off.
-      - if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v3
+      - uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           files: artifacts/*.vsix
           generate_release_notes: true
+
+  # Marketplace Trusted Publishing: vsce trades the job's GitHub OIDC token for
+  # a short-lived Marketplace credential, so no PAT is stored as a secret. Any
+  # step in a job holding id-token: write can mint that token, so this job runs
+  # nothing but GitHub's own actions and the pinned vsce.
+  publish:
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: artifacts
+          merge-multiple: true
 
       - uses: actions/setup-node@v6
         with:
@@ -77,4 +119,4 @@ jobs:
       # Each VSIX carries its own target platform. --skip-duplicate makes a rerun
       # after a partial failure publish only the targets still missing.
       - name: Publish to the Marketplace
-        run: npx --yes @vscode/vsce@4.1.0 publish --oidc --skip-duplicate --packagePath artifacts/*.vsix
+        run: npx --yes ${{ env.VSCE }} publish --oidc --skip-duplicate --packagePath artifacts/*.vsix
