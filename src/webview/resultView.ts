@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import type { JudgeResult } from '../leetcode/judge';
+import { casePassed, type JudgeResult } from '../leetcode/judge';
 import { escapeHtml } from './html';
 
 function block(title: string, body: string): string {
@@ -23,9 +23,7 @@ function cases(result: JudgeResult, input: string[]): string {
   for (let i = 0; i < count; i++) {
     const got = answers[i];
     const want = expected[i];
-    // Only call a case failed when there is something to compare it against.
-    const passed = want === undefined || got === want;
-    rows.push(`<tr class="${passed ? 'pass' : 'fail'}">
+    rows.push(`<tr class="${casePassed(result, i) ? 'pass' : 'fail'}">
       <td>${i + 1}</td>
       <td><code>${escapeHtml(input[i] ?? '')}</code></td>
       <td><code>${escapeHtml(got ?? '')}</code></td>

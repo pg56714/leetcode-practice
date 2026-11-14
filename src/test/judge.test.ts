@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { isSettled, readResult } from '../leetcode/judge';
+import { casePassed, isSettled, readResult } from '../leetcode/judge';
 import payloads from './fixtures/judge-payloads.json';
 
 /**
@@ -71,7 +71,7 @@ describe('readResult', () => {
     expect(result.totalTestcases).toBe(65);
   });
 
-  test('a rejected submission names its failing case, argments on one line', () => {
+  test('a rejected submission names its failing case, arguments on one line', () => {
     const result = readResult(payloads['submit-wrong-answer']);
     expect(result.accepted).toBe(false);
     expect(result.verdict).toBe('Wrong Answer');
@@ -85,6 +85,53 @@ describe('readResult', () => {
     const result = readResult({});
     expect(result.verdict).toBe('Unknown result');
     expect(result.accepted).toBe(false);
+  });
+});
+
+/**
+ * Which rows of the case table are marked as passing.
+ *
+ * Comparing printed answers is wrong for any problem that accepts more than
+ * one answer — two-sum itself takes its pair in either order — which showed a
+ * green Accepted above a table of red rows. compare_result is the judge's own
+ * verdict per case, so it decides whenever it is there.
+ */
+describe('casePassed', () => {
+  test("takes each case's verdict from compare_result", () => {
+    expect(payloads['test-correct'].compare_result).toBe('11');
+    expect(readResult(payloads['test-correct']).casesPassed).toEqual([true, true]);
+    expect(readResult(payloads['test-wrong-answer']).casesPassed).toEqual([false, false]);
+  });
+
+  test('passes an answer in another order when the judge passed it', () => {
+    const result = readResult({
+      ...payloads['test-correct'],
+      code_answer: ['[1,0]', '[2,1]', ''],
+      compare_result: '11',
+    });
+
+    expect(result.answers?.[0]).not.toBe(result.expected?.[0]);
+    expect(casePassed(result, 0)).toBe(true);
+    expect(casePassed(result, 1)).toBe(true);
+    expect(result.accepted).toBe(true);
+  });
+
+  test('falls back to comparing answers when the judge gave no verdict', () => {
+    const right = readResult({ ...payloads['test-correct'], compare_result: undefined });
+    const wrong = readResult({ ...payloads['test-wrong-answer'], compare_result: undefined });
+
+    expect(right.casesPassed).toBeUndefined();
+    expect(casePassed(right, 0)).toBe(true);
+    expect(casePassed(wrong, 0)).toBe(false);
+  });
+
+  test('does not fail a case that has nothing to compare against', () => {
+    expect(casePassed({ verdict: 'Accepted', accepted: true, ran: true }, 0)).toBe(true);
+  });
+
+  test("leaves a submission's verdicts alone, since its cases are never shown", () => {
+    expect(payloads['submit-correct'].compare_result).toHaveLength(65);
+    expect(readResult(payloads['submit-correct']).casesPassed).toBeUndefined();
   });
 });
 

@@ -14,6 +14,8 @@ export interface JudgeResult {
   /** What the code returned, one entry per case. Test runs only. */
   answers?: string[];
   expected?: string[];
+  /** The judge's own verdict on each case. Test runs only; see casePassed. */
+  casesPassed?: boolean[];
   /** Anything the code printed. */
   stdout?: string[];
   compileError?: string;
@@ -45,6 +47,12 @@ interface CheckPayload {
   /** Test runs: what the code returned, per case. */
   code_answer?: string[];
   expected_code_answer?: string[];
+  /**
+   * One character per case, "1" where the judge accepted it: "11" for two
+   * passing cases. Unlike the per-case arrays it has no trailing extra. A
+   * submission carries one too, covering every hidden test.
+   */
+  compare_result?: string;
   /** Test runs: printed output, per case. */
   std_output_list?: string[];
   /** Submissions: printed output, as one string. */
@@ -60,6 +68,24 @@ interface CheckPayload {
   /** The same case with arguments on one line, e.g. "[2,7,11,15], 9". */
   input_formatted?: string;
   expected_output?: string;
+}
+
+/**
+ * Whether one case of a test run passed.
+ *
+ * The judge's own verdict wins whenever it gave one. Comparing the printed
+ * answer with the expected one is only the fallback, because it is wrong for
+ * every problem that accepts more than one answer: two-sum takes its pair in
+ * either order, and others take any permutation or a tolerance. A case with
+ * nothing to compare against is not called a failure.
+ */
+export function casePassed(result: JudgeResult, index: number): boolean {
+  const verdict = result.casesPassed?.[index];
+  if (verdict !== undefined) {
+    return verdict;
+  }
+  const want = result.expected?.[index];
+  return want === undefined || result.answers?.[index] === want;
 }
 
 /** True once the judge has stopped working on a run. */
@@ -137,6 +163,12 @@ export function readResult(payload: unknown): JudgeResult {
   const expected = trimTrailingBlank(data.expected_code_answer);
   if (expected !== undefined && expected.length > 0) {
     result.expected = expected;
+  }
+  // Only a test run has cases on screen to mark; a submission's string covers
+  // hidden tests that are never shown, so it is left alone.
+  const verdicts = data.compare_result;
+  if (answers !== undefined && typeof verdicts === 'string' && /^[01]+$/.test(verdicts)) {
+    result.casesPassed = [...verdicts].map((flag) => flag === '1');
   }
 
   const printed = trimTrailingBlank(data.std_output_list) ?? [];
