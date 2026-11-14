@@ -41,15 +41,15 @@ export function unescapePost(content: string): string {
   const placeholder = String.fromCharCode(0);
 
   return content
-    .split(BACKSLASH + BACKSLASH)
+    .split(`${BACKSLASH}${BACKSLASH}`)
     .join(placeholder)
-    .split(BACKSLASH + 'n')
+    .split(`${BACKSLASH}n`)
     .join(NEWLINE)
-    .split(BACKSLASH + 'r')
+    .split(`${BACKSLASH}r`)
     .join('')
-    .split(BACKSLASH + 't')
+    .split(`${BACKSLASH}t`)
     .join(TAB)
-    .split(BACKSLASH + '"')
+    .split(`${BACKSLASH}"`)
     .join('"')
     .split(placeholder)
     .join(BACKSLASH);
